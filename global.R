@@ -8,7 +8,7 @@ require('rCharts')
 library('dplyr')
 
 
-DATA_DIRECTORY = '/home/ubuntu/dashboard/processed_data/'
+DATA_DIRECTORY = 'processed_data/'
 
 # channel
 channel<-reactive({
@@ -52,14 +52,14 @@ channel_daily_stats_df <-function(channel){
 
 ####################### dataframe ########################
 #channels data
-data_df <- channel_data_df("2017-05-16","cabschannel")
+data_df <- channel_data_df(as.character(Sys.Date()-3),"trainschannel")
 
 
 # daily stats for given channel
-stats_df <-channel_daily_stats_df("cabschannel")
+stats_df <-channel_daily_stats_df("trainschannel")
 
 # daily stats df for given date 
-stats_df_day <- stats_df[stats_df$date=="2017-05-16",]
+stats_df_day <- stats_df[stats_df$date==as.character(Sys.Date()-3),]
 ############################################################
 
 
@@ -94,39 +94,66 @@ plot <- data.frame(date=daily_stats$date,conversation=daily_stats$total_chats,us
 
 
 ######################## story_wise_analysis ###################
-conv_story <- dcast(data_df,coll_id + conv_no + story + breaked_conv ~ "count1",value.var = "count", fun.aggregate = sum)
-conv_story$count1 <- 1
-story_count <- dcast(conv_story, story + breaked_conv ~"value", value.var = "count1", fun.aggregate = sum)
-story_count <- story_count[story_count$story!="",]
-story_count <- cast(story_count, story~breaked_conv,sum)
+#conv_story <- dcast(data_df,coll_id + conv_no + story + breaked_conv ~ "count1",value.var = "count", fun.aggregate = sum)
+#conv_story$count1 <- 1
+#story_count <- dcast(conv_story, story + breaked_conv ~"value", value.var = "count1", fun.aggregate = sum)
+#story_count <- story_count[story_count$story!="",]
+#story_count <- cast(story_count, story~breaked_conv,sum)
 
-story_count$False = as.numeric(story_count$False) 
-story_count$True = as.numeric(story_count$True)
-story_count$total_conv <- story_count$False + story_count$True
-story_count$gogo_automation <- (story_count$False/story_count$total_conv)*100
-story_count <- plyr::rename(story_count, c("False"="#Gogo Chat", "True"="#Chats Breaked","total_conv" = "Total Conversations","gogo_automation"="%Gogo Automate"))
-columns <- c("story","Total Conversations","#Gogo Chat","#Chats Breaked","%Gogo Automate")
+#story_count$False = as.numeric(story_count$False) 
+#story_count$True = as.numeric(story_count$True)
+#story_count$total_conv <- story_count$False + story_count$True
+#story_count$gogo_automation <- (story_count$False/story_count$total_conv)*100
+#story_count <- plyr::rename(story_count, c("False"="#Gogo Chat", "True"="#Chats Breaked","total_conv" = "Total Conversations","gogo_automation"="%Gogo Automate"))
+#columns <- c("story","Total Conversations","#Gogo Chat","#Chats Breaked","%Gogo Automate")
+#story_count <- story_count[,columns] 
+#story_count <- story_count[order(-story_count$`Total Conversations`),]
+
+story_count <- stats_df_day
+story_count$end_to_end_chats <- round((story_count$end_to_end_chats/story_count$total_chats)*100,2) 
+story_count <- group_by(story_count, story)
+story_count <- summarize(story_count,total_chats = sum (total_chats, na.rm = T),end_to_end_chats = mean(end_to_end_chats))
+story_count <- data.frame(story=story_count$story,conversation=story_count$total_chats,gogo_automation=story_count$end_to_end_chats)
+
+columns <- c("story","Total Conversations","%Gogo Automate")
+story_count <- plyr::rename(story_count, c("conversation"="Total Conversations","gogo_automation"="%Gogo Automate"))
 story_count <- story_count[,columns] 
 story_count <- story_count[order(-story_count$`Total Conversations`),]
+
+
 ##########################################################################
 
 
 
 ############################### Sub story wise analysis ####################
-conv_story2 <- dcast(data_df,coll_id + conv_no + story + node_data + breaked_conv ~ "count1",value.var = "count", fun.aggregate = sum)
-conv_story2$count1 <- 1
-story_count2 <- dcast(conv_story2, story + node_data + breaked_conv ~"value", value.var = "count1", fun.aggregate = sum)
-story_count2 <- cast(story_count2, story+node_data~breaked_conv,sum)
-story_count2 <- story_count2[story_count2$node_data!="",]
+#conv_story2 <- dcast(data_df,coll_id + conv_no + story + node_data + breaked_conv ~ "count1",value.var = "count", fun.aggregate = sum)
+#conv_story2$count1 <- 1
+#story_count2 <- dcast(conv_story2, story + node_data + breaked_conv ~"value", value.var = "count1", fun.aggregate = sum)
+#story_count2 <- cast(story_count2, story+node_data~breaked_conv,sum)
+#story_count2 <- story_count2[story_count2$node_data!="",]
 
-story_count2$False = as.numeric(story_count2$False) 
-story_count2$True = as.numeric(story_count2$True)
-story_count2$total_conv <- story_count2$False + story_count2$True
-story_count2$gogo_automation <- (story_count2$False/story_count2$total_conv)*100
-columns <- c("story","Node","Total Conversations","#Gogo Chat","#Chats Breaked","%Gogo Automate")
-story_count2 <- plyr::rename(story_count2, c("node_data"="Node","False"="#Gogo Chat", "True"="#Chats Breaked","total_conv" = "Total Conversations","gogo_automation"="%Gogo Automate"))
+#story_count2$False = as.numeric(story_count2$False) 
+#story_count2$True = as.numeric(story_count2$True)
+#story_count2$total_conv <- story_count2$False + story_count2$True
+#story_count2$gogo_automation <- (story_count2$False/story_count2$total_conv)*100
+#columns <- c("story","Node","Total Conversations","#Gogo Chat","#Chats Breaked","%Gogo Automate")
+#story_count2 <- plyr::rename(story_count2, c("node_data"="Node","False"="#Gogo Chat", "True"="#Chats Breaked","total_conv" = "Total Conversations","gogo_automation"="%Gogo Automate"))
+#story_count2 <- story_count2[,columns] 
+#story_count2 <- story_count2[order(-story_count2$`Total Conversations`),]
+
+story_count2 <- stats_df_day
+story_count2$end_to_end_chats <- round((story_count2$end_to_end_chats/story_count2$total_chats)*100,2) 
+story_count2 <- group_by(story_count2, story, node)
+story_count2 <- summarize(story_count2,total_chats = sum (total_chats, na.rm = T),end_to_end_chats = mean(end_to_end_chats))
+story_count2 <- data.frame(story=story_count2$story,node=story_count2$node,conversation=story_count2$total_chats,gogo_automation=story_count2$end_to_end_chats)
+
+columns <- c("story","Node","Total Conversations","%Gogo Automate")
+story_count2 <- plyr::rename(story_count2, c("node"="Node","conversation"="Total Conversations","gogo_automation"="%Gogo Automate"))
 story_count2 <- story_count2[,columns] 
 story_count2 <- story_count2[order(-story_count2$`Total Conversations`),]
+
+
+
 ##############################################################################
 
 

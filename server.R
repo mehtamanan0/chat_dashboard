@@ -1,23 +1,60 @@
 
 shinyServer(function(input, output, session){
-
+  
+  data_df_r <- reactive({
+    data_df <- channel_data_df(as.character(input$date),input$channel)
+    updateSelectInput(session, "stories_input", label = NULL, choices =c("All",as.character(unique(data_df$story))), selected = "All")  # input$date and others are Date objects. When outputting
+    updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$node_data)), selected = NULL)  # input$date and others are Date objects. When outputting
+    updateSelectInput(session, "stop_logic", label = NULL, choices =as.character(unique(data_df$stop_logic_data)), selected = NULL)  # input$date and others are Date objects. When outputting
+    updateSelectInput(session, "message_by", label = NULL, choices =as.character(unique(data_df$message_by)), selected = NULL)  # input$date and others are Date objects. When outputting
+    return(data_df)
+  })
+  stats_df_r <-reactive({
+    stats_df_r <- channel_daily_stats_df(input$channel)
+    })
+  
+  ############################### Statistics ##################
+  # total conversation
+  total_conv <- reactive({
+    stats_df <- stats_df_r()
+    stats_df_day <- stats_df[stats_df$date==as.character(input$date),]
+    total_conv <- sum(stats_df_day['total_chats'])
+    return(total_conv)})
+  
+  #total users
+  total_users <-reactive({
+    data_df <- data_df_r()
+    total_users <- length(unique(data_df$coll_id))
+    return(total_users)
+    })
+  
+  #total gogo automation
+  end_end_conv <-reactive({ 
+    stats_df <-stats_df_r()
+    updateSelectInput(session, "stories", label = NULL, choices =as.character(unique(stats_df$story)), selected = stats_df$story[1])  # input$date and others are Date objects. When outputting
+    stats_df_day <- stats_df[stats_df$date==as.character(input$date),]
+    end_end_conv <- round((sum(stats_df_day['end_to_end_chats'])/sum(stats_df_day['total_chats']))*100,2)
+    return(end_end_conv)
+  })
+  ##########################################################################################################
+  
   output$total_conv <- renderValueBox({
     valueBox(
-      value = format(total_conv,big.mark=",",scientific=FALSE),
+      value = format(total_conv(),big.mark=",",scientific=FALSE),
       subtitle = "Total Conversations",
       icon = icon("list")
     )
   })
   output$users <- renderValueBox({
     valueBox(
-      value = format(total_users,big.mark=",",scientific=FALSE),
+      value = format(total_users(),big.mark=",",scientific=FALSE),
       subtitle = "Total Unique Users",
       icon = icon("users")
     )
   })
   output$automation <- renderValueBox({
     valueBox(
-      value = paste(format(end_end_conv,big.mark=",",scientific=FALSE),"%"),
+      value = paste(format(end_end_conv(),big.mark=",",scientific=FALSE),"%"),
       subtitle = "End to End Gogo Conversations",
       icon = icon("download")
     )
@@ -34,36 +71,21 @@ updateSelectInput(session, "break_message_word_cloud", label = NULL, choices =c(
 updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df$node_data)), selected = as.character(data_df$node_data[1]))  # input$date and others are Date objects. When outputting
 
 
-node<-reactive({
-  if(stories_input()=="All"){
-    updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$node_data)), selected = "All")  # input$date and others are Date objects. When outputting
-  }
-  else{
-  updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df[data_df$story==input$stories_input,]$node_data)), selected =NULL)  # input$date and others are Date objects. When outputting
-  }})
-
-
-story<-reactive({
-  story<-input$stories
-})
-
-stories_input<-reactive({
-  stories_input<-input$stories_input
-})
-
-new_conversation<-reactive({
-  new_conversation<-input$new_conversation
-})
-
-break_message<-reactive({
-  break_message<-input$break_message
-})
-
-
 
 datos<- function(){
-  node()
-  story_ = story()
+  story_ <- input$stories
+  date_  <- as.character(input$date)
+  stats_df <-stats_df_r()
+  stats_df_day <- stats_df[stats_df$date==date_,]
+  story_count2 <- stats_df_day
+  story_count2$end_to_end_chats <- round((story_count2$end_to_end_chats/story_count2$total_chats)*100,2) 
+  story_count2 <- group_by(story_count2, story, node)
+  story_count2 <- summarize(story_count2,total_chats = sum (total_chats, na.rm = T),end_to_end_chats = mean(end_to_end_chats))
+  story_count2 <- data.frame(story=story_count2$story,node=story_count2$node,conversation=story_count2$total_chats,gogo_automation=story_count2$end_to_end_chats)
+  columns <- c("story","Node","Total Conversations","%Gogo Automate")
+  story_count2 <- plyr::rename(story_count2, c("node"="Node","conversation"="Total Conversations","gogo_automation"="%Gogo Automate"))
+  story_count2 <- story_count2[,columns] 
+  story_count2 <- story_count2[order(-story_count2$`Total Conversations`),]
   if(story_ =="All"){
     df<-subset(story_count2, select = -c(story) )
   }
@@ -74,12 +96,27 @@ datos<- function(){
   return(df)
 }
 
-dataoutput<-reactive({
-  if(stories_input()=="All"){
+output$table3 =  renderTable(
+  datos(),digits = 0,include.rownames=FALSE
+)
+
+
+
+
+dataoutput<-function(){
+  print(input$stories_input)
+  data_df <- data_df_r()
+  columns <- c("chat_links","coll_id","conv_no","body","message_by","message_type_text","new_conv","node_data","detection_method","stop_logic_data",
+               "story")
+  data_df$chat_links <- paste0("<a href='",  data_df$chat_links, "' target='_blank'>See Chats</a>")
+  data_show_df <- data_df[,columns]
+ 
+  if(input$stories_input=="All"){
     df1 = data_show_df
   }
   else{
-    df1 <- data_show_df[data_show_df$story==stories_input(),]
+    df1 <- data_show_df[data_show_df$story==input$stories_input,]
+    updateSelectInput(session, "node", label = NULL, choices =as.character(unique(df1$node_data)), selected = NULL)  # input$date and others are Date objects. When outputting
   }
   if(!is.null(input$node)){
     df2 <- df1[df1$node_data==input$node,]
@@ -93,13 +130,13 @@ dataoutput<-reactive({
   else{
     df3 <- df2
   }
-  if(new_conversation()){
+  if(input$new_conversation){
     df4 <- df3[df3$new_conv=="True",]
   }
   else{
     df4 <- df3
   }
-  if(break_message()){
+  if(input$break_message){
     updateSelectInput(session, "stop_logic", label = NULL, choices =as.character(unique(data_df$stop_logic_data)), selected = NULL)
     df5 <- df4[df4$stop_logic_data %in% break_messages_type,]
   }
@@ -112,25 +149,7 @@ dataoutput<-reactive({
     }
   }
   return(df5)
-})
-
-dataquestion<-function(){
-  df <- dataoutput()
-  df <- df[df$question!="",]
-  df <- df[,c("question","story","node_data")]
-  return(df)
 }
-
-output$table1 =  renderTable(
-  story_count,digits = 0
-  )
-
-
-output$question_table =  DT::renderDataTable(
-  dataquestion(),class = 'cell-border stripe',rownames = FALSE,options = list(
-    autoWidth = TRUE,
-    columnDefs = list(list(width = '200px', targets = "_all")),scrollX = TRUE
-))
 
 
 output$table2 =  DT::renderDataTable(
@@ -139,9 +158,7 @@ output$table2 =  DT::renderDataTable(
     columnDefs = list(list(width = '200px', targets = 3)),scrollX = TRUE
   ), escape = FALSE)
 
-output$table3 =  renderTable(
-  datos(),digits = 0,include.rownames=FALSE
-  )
+
 
 
   output$downloadData <- downloadHandler(
@@ -152,6 +169,18 @@ output$table3 =  renderTable(
   
 
 output$chart <- renderChart({
+   stats_df <-stats_df_r()
+   min_date_range <- as.Date(Sys.time()) - 10
+   stats_df$date = strftime(stats_df$date,"%d/%m/%Y")
+   daily_stats = stats_df[stats_df$date >= min_date_range,]
+   daily_stats <- group_by(stats_df, date)
+   daily_stats <- summarize(daily_stats, users_count = mean(users_count, na.rm = T), total_chats = sum (total_chats, 
+                                                                                                       na.rm = T),end_to_end_chats = round((sum(end_to_end_chats)/sum(total_chats))*100,2))
+   plot <- data.frame(date=daily_stats$date,conversation=daily_stats$total_chats,users=daily_stats$users_count,gogo_automation=daily_stats$end_to_end_chats)
+  
+  
+  
+  
     h <- Highcharts$new()
     h$chart(zoomType="xy")
     h$title(text="Channel Performance - Last 7 Days")
@@ -174,8 +203,24 @@ output$chart <- renderChart({
     return(h)
 })
 
+story_count <- reactive({
+  stats_df <-stats_df_r()
+  stats_df_day <- stats_df[stats_df$date==as.character(input$date),]
+  story_count <- stats_df_day
+  story_count$end_to_end_chats <- round((story_count$end_to_end_chats/story_count$total_chats)*100,2) 
+  story_count <- group_by(story_count, story)
+  story_count <- summarize(story_count,total_chats = sum (total_chats, na.rm = T),end_to_end_chats = mean(end_to_end_chats))
+  story_count <- data.frame(story=story_count$story,conversation=story_count$total_chats,gogo_automation=story_count$end_to_end_chats)
+  
+  columns <- c("story","Total Conversations","%Gogo Automate")
+  story_count <- plyr::rename(story_count, c("conversation"="Total Conversations","gogo_automation"="%Gogo Automate"))
+  story_count <- story_count[,columns] 
+  story_count <- story_count[order(-story_count$`Total Conversations`),]
+  return(story_count)
+})
+
 output$table1 =  renderTable(
-  story_count,digits = 0,include.rownames=FALSE
+  story_count(),digits = 0,include.rownames=FALSE
 )
 
 get_word_cloud_table <- function(ngram,node,breakmessage){

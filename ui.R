@@ -3,11 +3,11 @@ dashboardPage(skin = "black",
   dashboardSidebar(
     sidebarMenu(
     menuItem("Haptik", tabName = "haptik", icon = icon("cloud")),
-    dateInput('date', 'Select date for analysis', value = "2017-05-14" , min = NULL, max = NULL,
+    dateInput('date', 'Select date for analysis', value = "2017-05-16" , min = NULL, max = NULL,
               format = "yyyy-mm-dd", startview = "month", weekstart = 0,
               language = "en", width = NULL)
     ),
-    selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = c("trainschannel","flightschannel","cabschannel"))
+    selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = c("trainschannel","flightschannel","cabschannel","rechargechannel"))
    
 ),
   dashboardBody(
@@ -98,12 +98,12 @@ dashboardPage(skin = "black",
                 ),
                 
               fluidRow(
-                box(height = 400,
+                box(
                   title = "Stories Wise Chat Analysis", status = "primary", solidHeader = TRUE,
                   tableOutput("table1")
                 ),
                 
-                box(height = 400,
+                box(
                   title = "Sub Story Wise Chat Analysis", status = "primary", solidHeader = TRUE,
                   selectInput('stories', 'Select Stories', multiple=FALSE, selectize=TRUE,choices = NULL,selected = NULL),
                   tableOutput("table3")

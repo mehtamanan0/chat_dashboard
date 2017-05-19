@@ -99,12 +99,22 @@ datos<- function(){
 output$table3 =  renderTable(
   datos(),digits = 0,include.rownames=FALSE
 )
+story_input <- reactive({
+  story_input <- input$stories_input
+  
+})
 
-
-
+node<- reactive({
+  data_df <- data_df_r()
+  if(input$stories_input=="All"){
+  updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$node_data)), selected = "All")  # input$date and others are Date objects. When outputting
+}
+else{
+  updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df[data_df$story==input$stories_input,]$node_data)), selected =NULL)  # input$date and others are Date objects. When outputting
+}})
 
 dataoutput<-function(){
-  print(input$stories_input)
+  node()
   data_df <- data_df_r()
   columns <- c("chat_links","coll_id","conv_no","body","message_by","message_type_text","new_conv","node_data","detection_method","stop_logic_data",
                "story")
@@ -116,7 +126,6 @@ dataoutput<-function(){
   }
   else{
     df1 <- data_show_df[data_show_df$story==input$stories_input,]
-    updateSelectInput(session, "node", label = NULL, choices =as.character(unique(df1$node_data)), selected = NULL)  # input$date and others are Date objects. When outputting
   }
   if(!is.null(input$node)){
     df2 <- df1[df1$node_data==input$node,]
@@ -211,7 +220,6 @@ story_count <- reactive({
   story_count <- group_by(story_count, story)
   story_count <- summarize(story_count,total_chats = sum (total_chats, na.rm = T),end_to_end_chats = mean(end_to_end_chats))
   story_count <- data.frame(story=story_count$story,conversation=story_count$total_chats,gogo_automation=story_count$end_to_end_chats)
-  
   columns <- c("story","Total Conversations","%Gogo Automate")
   story_count <- plyr::rename(story_count, c("conversation"="Total Conversations","gogo_automation"="%Gogo Automate"))
   story_count <- story_count[,columns] 

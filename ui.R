@@ -47,6 +47,9 @@ dashboardPage(skin = "black",
                               .skin-black .sidebar a{
                                 color:#696969;
                               }
+                              .skin-black .sidebar .shiny-input-container .control-label{
+                                 color:#333;
+                              }
                               .box.box-solid.box-warning>.box-header{
                                 color:#333;
                               }

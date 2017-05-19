@@ -8,7 +8,7 @@ require('rCharts')
 library('dplyr')
 
 
-DATA_DIRECTORY = 'processed_data/'
+DATA_DIRECTORY = '/home/ubuntu/dashboard_data/processed_data/'
 
 # channel
 channel<-reactive({
@@ -61,18 +61,6 @@ stats_df <-channel_daily_stats_df("trainschannel")
 # daily stats df for given date 
 stats_df_day <- stats_df[stats_df$date==as.character(Sys.Date()-3),]
 ############################################################
-
-
-############################### Statistics ##################
-# total conversation
-total_conv <- sum(stats_df_day['total_chats'])
-
-#total users
-total_users <-length(unique(data_df$coll_id))
-
-#total gogo automation
-end_end_conv <- round((sum(stats_df_day['end_to_end_chats'])/sum(stats_df_day['total_chats']))*100,2)
-##########################################################################################################
 
 
 

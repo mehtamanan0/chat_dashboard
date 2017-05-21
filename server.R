@@ -7,6 +7,8 @@ shinyServer(function(input, output, session){
     updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$node_data)), selected = NULL)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "stop_logic", label = NULL, choices =c("All",as.character(unique(data_df$stop_logic_data))), selected = NULL)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "message_by", label = NULL, choices =as.character(unique(data_df$message_by)), selected = NULL)  # input$date and others are Date objects. When outputting
+    updateSelectInput(session, "break_message_word_cloud", label = NULL, choices =c("All",as.character(unique(data_df$stop_logic_data))), selected = "All")  # input$date and others are Date objects. When outputting
+    updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df$node_data)), selected = as.character(data_df$node_data[1]))  # input$date and others are Date objects. When outputting
     return(data_df)
   })
   stats_df_r <-reactive({
@@ -104,6 +106,17 @@ story_input <- reactive({
   
 })
 
+is_break_message <- reactive({
+  data_df <- data_df_r()
+  if(input$break_message){
+    updateSelectInput(session, "stop_logic", label = NULL, choices =c("All",break_messages_type), selected = "All") 
+  }  
+  else{
+    updateSelectInput(session, "stop_logic", label = NULL, choices =c("All",as.character(unique(data_df$stop_logic_data))), selected = "All") 
+  }
+  return(input$break_message)
+})
+
 node<- reactive({
   data_df <- data_df_r()
   if(input$stories_input=="All"){
@@ -145,12 +158,11 @@ dataoutput<-function(){
   else{
     df4 <- df3
   }
-  if(input$break_message){
+  break_message <- is_break_message()
+  if(break_message){
     df5 <- df4[df4$stop_logic_data %in% break_messages_type,]
-    updateSelectInput(session, "stop_logic", label = NULL, choices =c("All",as.character(unique(df5$stop_logic_data))), selected = "All")
   }
   else{
-    updateSelectInput(session, "stop_logic", label = NULL, choices =c("All",as.character(unique(df4$stop_logic_data))), selected = "All")
     if(input$stop_logic!="All"){
       df5 <- df4[df4$stop_logic_data == input$stop_logic,]  
     }

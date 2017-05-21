@@ -5,7 +5,7 @@ shinyServer(function(input, output, session){
     data_df <- channel_data_df(as.character(input$date),input$channel)
     updateSelectInput(session, "stories_input", label = NULL, choices =c("All",as.character(unique(data_df$story))), selected = "All")  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$node_data)), selected = NULL)  # input$date and others are Date objects. When outputting
-    updateSelectInput(session, "stop_logic", label = NULL, choices =c(("All",as.character(unique(data_df$stop_logic_data)))), selected = NULL)  # input$date and others are Date objects. When outputting
+    updateSelectInput(session, "stop_logic", label = NULL, choices =c("All",as.character(unique(data_df$stop_logic_data))), selected = NULL)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "message_by", label = NULL, choices =as.character(unique(data_df$message_by)), selected = NULL)  # input$date and others are Date objects. When outputting
     return(data_df)
   })
@@ -148,9 +148,9 @@ dataoutput<-function(){
   if(input$break_message){
     df5 <- df4[df4$stop_logic_data %in% break_messages_type,]
     updateSelectInput(session, "stop_logic", label = NULL, choices =c("All",as.character(unique(df5$stop_logic_data))), selected = "All")
-
   }
   else{
+    updateSelectInput(session, "stop_logic", label = NULL, choices =c("All",as.character(unique(df4$stop_logic_data))), selected = "All")
     if(input$stop_logic!="All"){
       df5 <- df4[df4$stop_logic_data == input$stop_logic,]  
     }
@@ -233,6 +233,7 @@ output$table1 =  renderTable(
 )
 
 get_word_cloud_table <- function(ngram,node,breakmessage){
+  data_df <- data_df_r()
   df1 <- data_df[data_df$message_by=="User",]
   if(node != "All") {
     df2 <- df1[df1$node_data %in% node,]

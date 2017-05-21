@@ -8,7 +8,7 @@ require('rCharts')
 library('dplyr')
 
 
-DATA_DIRECTORY = '/home/ubuntu/dashboard_data/processed_data/'
+DATA_DIRECTORY = 'processed_data/'
 
 # channel
 channel<-reactive({

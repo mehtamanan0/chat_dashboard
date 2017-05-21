@@ -52,11 +52,11 @@ channel_daily_stats_df <-function(channel){
 
 ####################### dataframe ########################
 #channels data
-data_df <- channel_data_df(as.character(Sys.Date()-3),"trainschannel")
+data_df <- channel_data_df(as.character(Sys.Date()-3),"flightschannel")
 
 
 # daily stats for given channel
-stats_df <-channel_daily_stats_df("trainschannel")
+stats_df <-channel_daily_stats_df("flightschannel")
 
 # daily stats df for given date 
 stats_df_day <- stats_df[stats_df$date==as.character(Sys.Date()-3),]

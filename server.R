@@ -5,7 +5,7 @@ shinyServer(function(input, output, session){
     data_df <- channel_data_df(as.character(input$date),input$channel)
     updateSelectInput(session, "stories_input", label = NULL, choices =c("All",as.character(unique(data_df$story))), selected = "All")  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$node_data)), selected = NULL)  # input$date and others are Date objects. When outputting
-    updateSelectInput(session, "stop_logic", label = NULL, choices =as.character(unique(data_df$stop_logic_data)), selected = NULL)  # input$date and others are Date objects. When outputting
+    updateSelectInput(session, "stop_logic", label = NULL, choices =c(("All",as.character(unique(data_df$stop_logic_data)))), selected = NULL)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "message_by", label = NULL, choices =as.character(unique(data_df$message_by)), selected = NULL)  # input$date and others are Date objects. When outputting
     return(data_df)
   })
@@ -64,7 +64,7 @@ shinyServer(function(input, output, session){
 updateSelectInput(session, "stories", label = NULL, choices =as.character(unique(story_count$story)), selected = story_count$story[1])  # input$date and others are Date objects. When outputting
 updateSelectInput(session, "stories_input", label = NULL, choices =c("All",as.character(unique(data_df$story))), selected = "All")  # input$date and others are Date objects. When outputting
 updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$node_data)), selected = NULL)  # input$date and others are Date objects. When outputting
-updateSelectInput(session, "stop_logic", label = NULL, choices =as.character(unique(data_df$stop_logic_data)), selected = NULL)  # input$date and others are Date objects. When outputting
+updateSelectInput(session, "stop_logic", label = NULL, choices =c("All",as.character(unique(data_df$stop_logic_data))), selected = NULL)  # input$date and others are Date objects. When outputting
 updateSelectInput(session, "message_by", label = NULL, choices =as.character(unique(data_df$message_by)), selected = NULL)  # input$date and others are Date objects. When outputting
 
 updateSelectInput(session, "break_message_word_cloud", label = NULL, choices =c("All",as.character(unique(data_df$stop_logic_data))), selected = "All")  # input$date and others are Date objects. When outputting
@@ -78,9 +78,9 @@ datos<- function(){
   stats_df <-stats_df_r()
   stats_df_day <- stats_df[stats_df$date==date_,]
   story_count2 <- stats_df_day
-  story_count2$end_to_end_chats <- round((story_count2$end_to_end_chats/story_count2$total_chats)*100,2) 
   story_count2 <- group_by(story_count2, story, node)
-  story_count2 <- summarize(story_count2,total_chats = sum (total_chats, na.rm = T),end_to_end_chats = mean(end_to_end_chats))
+  story_count2 <- summarize(story_count2,total_chats = sum (total_chats, na.rm = T),end_to_end_chats = sum(end_to_end_chats))
+  story_count2$end_to_end_chats <- round((story_count2$end_to_end_chats/story_count2$total_chats)*100,2)
   story_count2 <- data.frame(story=story_count2$story,node=story_count2$node,conversation=story_count2$total_chats,gogo_automation=story_count2$end_to_end_chats)
   columns <- c("story","Node","Total Conversations","%Gogo Automate")
   story_count2 <- plyr::rename(story_count2, c("node"="Node","conversation"="Total Conversations","gogo_automation"="%Gogo Automate"))
@@ -146,11 +146,12 @@ dataoutput<-function(){
     df4 <- df3
   }
   if(input$break_message){
-    updateSelectInput(session, "stop_logic", label = NULL, choices =as.character(unique(data_df$stop_logic_data)), selected = NULL)
     df5 <- df4[df4$stop_logic_data %in% break_messages_type,]
+    updateSelectInput(session, "stop_logic", label = NULL, choices =c("All",as.character(unique(df5$stop_logic_data))), selected = "All")
+
   }
   else{
-    if(!is.null(input$stop_logic)){
+    if(input$stop_logic!="All"){
       df5 <- df4[df4$stop_logic_data == input$stop_logic,]  
     }
     else{
@@ -216,9 +217,9 @@ story_count <- reactive({
   stats_df <-stats_df_r()
   stats_df_day <- stats_df[stats_df$date==as.character(input$date),]
   story_count <- stats_df_day
-  story_count$end_to_end_chats <- round((story_count$end_to_end_chats/story_count$total_chats)*100,2) 
   story_count <- group_by(story_count, story)
-  story_count <- summarize(story_count,total_chats = sum (total_chats, na.rm = T),end_to_end_chats = mean(end_to_end_chats))
+  story_count <- summarize(story_count,total_chats = sum (total_chats, na.rm = T),end_to_end_chats = sum(end_to_end_chats))
+  story_count$end_to_end_chats <- round((story_count$end_to_end_chats/story_count$total_chats)*100,2)
   story_count <- data.frame(story=story_count$story,conversation=story_count$total_chats,gogo_automation=story_count$end_to_end_chats)
   columns <- c("story","Total Conversations","%Gogo Automate")
   story_count <- plyr::rename(story_count, c("conversation"="Total Conversations","gogo_automation"="%Gogo Automate"))

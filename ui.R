@@ -3,11 +3,11 @@ dashboardPage(skin = "black",
   dashboardSidebar(
     sidebarMenu(
     menuItem("Haptik", tabName = "haptik", icon = icon("cloud")),
-    dateInput('date', 'Select date for analysis', value = "2017-05-16" , min = NULL, max = NULL,
+    dateInput('date', 'Select date for analysis', value = as.character(Sys.Date()-2) , min = NULL, max = NULL,
               format = "yyyy-mm-dd", startview = "month", weekstart = 0,
               language = "en", width = NULL)
     ),
-    selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = c("trainschannel","flightschannel","cabschannel","rechargechannel"))
+    selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = c("flightschannel","trainschannel","cabschannel","rechargechannel","reminderschannel"))
    
 ),
   dashboardBody(

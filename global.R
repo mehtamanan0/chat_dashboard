@@ -96,18 +96,20 @@ plot <- data.frame(date=daily_stats$date,conversation=daily_stats$total_chats,us
 #columns <- c("story","Total Conversations","#Gogo Chat","#Chats Breaked","%Gogo Automate")
 #story_count <- story_count[,columns] 
 #story_count <- story_count[order(-story_count$`Total Conversations`),]
-
 story_count <- stats_df_day
-story_count$end_to_end_chats <- round((story_count$end_to_end_chats/story_count$total_chats)*100,2) 
-story_count <- group_by(story_count, story)
-story_count <- summarize(story_count,total_chats = sum (total_chats, na.rm = T),end_to_end_chats = mean(end_to_end_chats))
-story_count <- data.frame(story=story_count$story,conversation=story_count$total_chats,gogo_automation=story_count$end_to_end_chats)
+story_count <- group_by(story_count,coll_id,conv_no, story)
+story_count <- summarize(story_count,total_chats = 1,end_to_end_chats = min(end_to_end_chats))
 
+story_count <- group_by(story_count, story)
+story_count <- summarize(story_count,total_chats = sum(total_chats),end_to_end_chats = sum(end_to_end_chats))
+
+
+story_count$end_to_end_chats <- round((story_count$end_to_end_chats/story_count$total_chats)*100,2)
+story_count <- data.frame(story=story_count$story,conversation=story_count$total_chats,gogo_automation=story_count$end_to_end_chats)
 columns <- c("story","Total Conversations","%Gogo Automate")
 story_count <- plyr::rename(story_count, c("conversation"="Total Conversations","gogo_automation"="%Gogo Automate"))
 story_count <- story_count[,columns] 
 story_count <- story_count[order(-story_count$`Total Conversations`),]
-
 
 ##########################################################################
 
@@ -130,11 +132,14 @@ story_count <- story_count[order(-story_count$`Total Conversations`),]
 #story_count2 <- story_count2[order(-story_count2$`Total Conversations`),]
 
 story_count2 <- stats_df_day
-story_count2$end_to_end_chats <- round((story_count2$end_to_end_chats/story_count2$total_chats)*100,2) 
-story_count2 <- group_by(story_count2, story, node)
-story_count2 <- summarize(story_count2,total_chats = sum (total_chats, na.rm = T),end_to_end_chats = mean(end_to_end_chats))
-story_count2 <- data.frame(story=story_count2$story,node=story_count2$node,conversation=story_count2$total_chats,gogo_automation=story_count2$end_to_end_chats)
+story_count2 <- group_by(story_count2, coll_id, conv_no, story, node)
+story_count2 <- summarize(story_count2,total_chats = 1,end_to_end_chats = min(end_to_end_chats))
 
+story_count2 <- group_by(story_count2, story, node)
+story_count2 <- summarize(story_count2,total_chats = sum(total_chats),end_to_end_chats = sum(end_to_end_chats))
+
+story_count2$end_to_end_chats <- round((story_count2$end_to_end_chats/story_count2$total_chats)*100,2)
+story_count2 <- data.frame(story=story_count2$story,node=story_count2$node,conversation=story_count2$total_chats,gogo_automation=story_count2$end_to_end_chats)
 columns <- c("story","Node","Total Conversations","%Gogo Automate")
 story_count2 <- plyr::rename(story_count2, c("node"="Node","conversation"="Total Conversations","gogo_automation"="%Gogo Automate"))
 story_count2 <- story_count2[,columns] 

@@ -216,8 +216,9 @@ output$chart <- renderChart({
    daily_stats <- group_by(daily_stats, date)
    daily_stats <- summarize(daily_stats, users_count = mean(users_count, na.rm = T), total_chats = sum (total_chats, 
                                                                                                        na.rm = T),end_to_end_chats = round((sum(end_to_end_chats)/sum(total_chats))*100,2))
+   
    plot <- data.frame(date=daily_stats$date,conversation=daily_stats$total_chats,users=daily_stats$users_count,gogo_automation=daily_stats$end_to_end_chats)
-  
+   plot$users <- as.integer(plot$users)
   
     print(plot)
   

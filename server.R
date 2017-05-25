@@ -20,7 +20,9 @@ shinyServer(function(input, output, session){
   total_conv <- reactive({
     stats_df <- stats_df_r()
     stats_df_day <- stats_df[stats_df$date==as.character(input$date),]
-    total_conv <- sum(stats_df_day['total_chats'])
+    stats_df_day$value <- 1
+    unique_chats <- dcast(stats_df_day, coll_id + conv_no ~ "sum", value.var="value",  fun.aggregate=sum)
+    total_conv <- sum(unique_chats['sum'])
     return(total_conv)})
   
   #total users

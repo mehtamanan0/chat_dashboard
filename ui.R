@@ -3,7 +3,7 @@ dashboardPage(skin = "black",
   dashboardSidebar(
     sidebarMenu(
     menuItem("Haptik", tabName = "haptik", icon = icon("cloud")),
-    dateInput('date', 'Select date for analysis', value = as.character(Sys.Date()-5) , min = NULL, max = NULL,
+    dateInput('date', 'Select date for analysis', value = as.character(Sys.Date()-1) , min = NULL, max = NULL,
               format = "yyyy-mm-dd", startview = "month", weekstart = 0,
               language = "en", width = NULL)
     ),

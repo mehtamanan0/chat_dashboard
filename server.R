@@ -20,8 +20,8 @@ shinyServer(function(input, output, session){
   total_conv <- reactive({
     stats_df <- stats_df_r()
     stats_df_day <- stats_df[stats_df$date==as.character(input$date),]
-    stats_df_day$value <- 1
-    unique_chats <- dcast(stats_df_day, coll_id + conv_no ~ "sum", value.var="value",  fun.aggregate=sum)
+    unique_chats <- dcast(stats_df_day, coll_id + conv_no ~ "sum")
+    unique_chats$sum <-1
     total_conv <- sum(unique_chats['sum'])
     return(total_conv)})
   
@@ -37,7 +37,12 @@ shinyServer(function(input, output, session){
     stats_df <-stats_df_r()
     updateSelectInput(session, "stories", label = NULL, choices =as.character(unique(stats_df$story)), selected = stats_df$story[1])  # input$date and others are Date objects. When outputting
     stats_df_day <- stats_df[stats_df$date==as.character(input$date),]
-    end_end_conv <- round((sum(stats_df_day['end_to_end_chats'])/sum(stats_df_day['total_chats']))*100,2)
+    unique_chats <- dcast(stats_df_day, coll_id + conv_no ~ "sum")
+    unique_chats$sum <-1
+    total_conv <- sum(unique_chats['sum'])
+    stats_df_day <- group_by(stats_df_day,coll_id, conv_no)
+    stats_df_day <- summarize(stats_df_day,end_to_end_chats = as.integer(sum(end_to_end_chats)/length(end_to_end_chats)))
+    end_end_conv <- round((sum(stats_df_day$end_to_end_chats)/total_conv)*100,2)
     return(end_end_conv)
   })
   ##########################################################################################################
@@ -82,8 +87,12 @@ datos<- function(){
   stats_df <-stats_df_r()
   stats_df_day <- stats_df[stats_df$date==date_,]
   story_count2 <- stats_df_day
+  story_count2 <- group_by(story_count2, coll_id, conv_no, story, node)
+  story_count2 <- summarize(story_count2,total_chats = 1,end_to_end_chats = min(end_to_end_chats))
+  
   story_count2 <- group_by(story_count2, story, node)
-  story_count2 <- summarize(story_count2,total_chats = sum (total_chats, na.rm = T),end_to_end_chats = sum(end_to_end_chats))
+  story_count2 <- summarize(story_count2,total_chats = sum(total_chats),end_to_end_chats = sum(end_to_end_chats))
+  
   story_count2$end_to_end_chats <- round((story_count2$end_to_end_chats/story_count2$total_chats)*100,2)
   story_count2 <- data.frame(story=story_count2$story,node=story_count2$node,conversation=story_count2$total_chats,gogo_automation=story_count2$end_to_end_chats)
   columns <- c("story","Node","Total Conversations","%Gogo Automate")
@@ -195,15 +204,22 @@ output$table2 =  DT::renderDataTable(
 output$chart <- renderChart({
    stats_df <-stats_df_r()
    min_date_range <- as.Date(Sys.time()) - 10
-   stats_df$date = strftime(stats_df$date,"%d/%m/%Y")
-   daily_stats = stats_df[stats_df$date >= min_date_range,]
-   daily_stats <- group_by(stats_df, date)
+   stats_df$date <- as.Date(stats_df$date) 
+   daily_stats <- stats_df[stats_df$date >= as.Date(min_date_range),]
+   daily_stats <- daily_stats[c("date","coll_id","conv_no","total_chats","end_to_end_chats","users_count")]
+   print(daily_stats)
+   daily_stats <- group_by(daily_stats,date , coll_id, conv_no)
+   daily_stats <- summarize(daily_stats,users_count = mean(users_count, na.rm = T), end_to_end_chats = min(end_to_end_chats),
+                            total_chats=1)
+   
+   print(daily_stats)
+   daily_stats <- group_by(daily_stats, date)
    daily_stats <- summarize(daily_stats, users_count = mean(users_count, na.rm = T), total_chats = sum (total_chats, 
                                                                                                        na.rm = T),end_to_end_chats = round((sum(end_to_end_chats)/sum(total_chats))*100,2))
    plot <- data.frame(date=daily_stats$date,conversation=daily_stats$total_chats,users=daily_stats$users_count,gogo_automation=daily_stats$end_to_end_chats)
   
   
-  
+    print(plot)
   
     h <- Highcharts$new()
     h$chart(zoomType="xy")
@@ -231,8 +247,13 @@ story_count <- reactive({
   stats_df <-stats_df_r()
   stats_df_day <- stats_df[stats_df$date==as.character(input$date),]
   story_count <- stats_df_day
+  story_count <- group_by(story_count,coll_id,conv_no, story)
+  story_count <- summarize(story_count,total_chats = 1,end_to_end_chats = min(end_to_end_chats))
+  
   story_count <- group_by(story_count, story)
-  story_count <- summarize(story_count,total_chats = sum (total_chats, na.rm = T),end_to_end_chats = sum(end_to_end_chats))
+  story_count <- summarize(story_count,total_chats = sum(total_chats),end_to_end_chats = sum(end_to_end_chats))
+  
+  
   story_count$end_to_end_chats <- round((story_count$end_to_end_chats/story_count$total_chats)*100,2)
   story_count <- data.frame(story=story_count$story,conversation=story_count$total_chats,gogo_automation=story_count$end_to_end_chats)
   columns <- c("story","Total Conversations","%Gogo Automate")

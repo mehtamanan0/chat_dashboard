@@ -9,6 +9,8 @@ library('dplyr')
 
 
 DATA_DIRECTORY = '/home/ubuntu/dashboard_Data/processed_data/'
+#DATA_DIRECTORY = 'processed_data/'
+
 
 # channel
 channel<-reactive({

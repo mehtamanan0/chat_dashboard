@@ -122,7 +122,8 @@ dashboardPage(skin = "black",
                     selectInput('stop_logic', 'Select Stop Logic', multiple=FALSE, selectize=TRUE,choices = NULL),
                     selectInput('message_by', 'Message By', multiple=FALSE, selectize=TRUE,choices = NULL),
                     checkboxInput('new_conversation', 'New Convesation only', value = FALSE, width = NULL),
-                    checkboxInput('break_message', 'Select Break Message Only', value = FALSE, width = NULL)  
+                    checkboxInput('break_message', 'Select Break Message Only', value = FALSE, width = NULL),
+                    checkboxInput('include', 'Show Previous Messages', value = FALSE, width = NULL)
                     )
                 #box(
                 #  title = "Top Questions",width = "9",

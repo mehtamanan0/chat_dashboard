@@ -141,11 +141,9 @@ else{
 dataoutput<-function(){
   node()
   data_df <- data_df_r()
-  columns <- c("chat_links","coll_id","conv_no","body","message_by","message_type_text","new_conv","last_node","detection_method","stop_logic_data",
-               "story")
   data_df$chat_links <- paste0("<a href='",  data_df$chat_links, "' target='_blank'>See Chats</a>")
-  data_show_df <- data_df[,columns]
- 
+  data_show_df <- data_df
+  
   if(input$stories_input=="All"){
     df1 = data_show_df
   }
@@ -182,6 +180,12 @@ dataoutput<-function(){
       df5 <- df4
     }
   }
+  columns <- c("chat_links","coll_id","conv_no","body","message_by","message_type_text","new_conv","last_node","detection_method","stop_logic_data",
+               "story")
+  if(input$include){
+    columns <- c(columns, "prev_message","second_prev_message")
+  }
+  df5 <- df5[,columns]
   return(df5)
 }
 

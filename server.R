@@ -183,7 +183,7 @@ dataoutput<-function(){
   columns <- c("chat_links","coll_id","conv_no","body","message_by","message_type_text","new_conv","last_node","detection_method","stop_logic_data",
                "story")
   if(input$include){
-    columns <- c(columns, "prev_message","second_prev_message")
+    columns <- c(columns, "prev_message", "second_prev_message", "next_message", "second_next_message")
   }
   df5 <- df5[,columns]
   return(df5)

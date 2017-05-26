@@ -8,7 +8,7 @@ require('rCharts')
 library('dplyr')
 
 
-DATA_DIRECTORY = 'processed_data/'
+DATA_DIRECTORY = '/home/ubuntu/dashboard_Data/processed_data/'
 
 # channel
 channel<-reactive({
@@ -52,14 +52,14 @@ channel_daily_stats_df <-function(channel){
 
 ####################### dataframe ########################
 #channels data
-data_df <- channel_data_df(as.character(Sys.Date()-1),"flightschannel")
+data_df <- channel_data_df(as.character(Sys.Date()-2),"flightschannel")
 
 
 # daily stats for given channel
 stats_df <-channel_daily_stats_df("flightschannel")
 
 # daily stats df for given date 
-stats_df_day <- stats_df[stats_df$date==as.character(Sys.Date()-1),]
+stats_df_day <- stats_df[stats_df$date==as.character(Sys.Date()-2),]
 ############################################################
 
 

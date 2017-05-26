@@ -4,11 +4,12 @@ shinyServer(function(input, output, session){
   data_df_r <- reactive({
     data_df <- channel_data_df(as.character(input$date),input$channel)
     updateSelectInput(session, "stories_input", label = NULL, choices =c("All",as.character(unique(data_df$story))), selected = "All")  # input$date and others are Date objects. When outputting
-    updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$node_data)), selected = NULL)  # input$date and others are Date objects. When outputting
+    updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$last_node)), selected = NULL)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "stop_logic", label = NULL, choices =c("All",as.character(unique(data_df$stop_logic_data))), selected = NULL)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "message_by", label = NULL, choices =as.character(unique(data_df$message_by)), selected = NULL)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "break_message_word_cloud", label = NULL, choices =c("All",as.character(unique(data_df$stop_logic_data))), selected = "All")  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df$node_data)), selected = as.character(data_df$node_data[1]))  # input$date and others are Date objects. When outputting
+    data_df[c("last_node")][is.na(data_df[c("last_node")])] <- "No Nodes"
     return(data_df)
   })
   stats_df_r <-reactive({
@@ -72,7 +73,7 @@ shinyServer(function(input, output, session){
 
 updateSelectInput(session, "stories", label = NULL, choices =as.character(unique(story_count$story)), selected = story_count$story[1])  # input$date and others are Date objects. When outputting
 updateSelectInput(session, "stories_input", label = NULL, choices =c("All",as.character(unique(data_df$story))), selected = "All")  # input$date and others are Date objects. When outputting
-updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$node_data)), selected = NULL)  # input$date and others are Date objects. When outputting
+updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$last_node)), selected = NULL)  # input$date and others are Date objects. When outputting
 updateSelectInput(session, "stop_logic", label = NULL, choices =c("All",as.character(unique(data_df$stop_logic_data))), selected = NULL)  # input$date and others are Date objects. When outputting
 updateSelectInput(session, "message_by", label = NULL, choices =as.character(unique(data_df$message_by)), selected = NULL)  # input$date and others are Date objects. When outputting
 
@@ -131,16 +132,16 @@ is_break_message <- reactive({
 node<- reactive({
   data_df <- data_df_r()
   if(input$stories_input=="All"){
-  updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$node_data)), selected = "All")  # input$date and others are Date objects. When outputting
+  updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$last_node)), selected = "All")  # input$date and others are Date objects. When outputting
 }
 else{
-  updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df[data_df$story==input$stories_input,]$node_data)), selected =NULL)  # input$date and others are Date objects. When outputting
+  updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df[data_df$story==input$stories_input,]$last_node)), selected =NULL)  # input$date and others are Date objects. When outputting
 }})
 
 dataoutput<-function(){
   node()
   data_df <- data_df_r()
-  columns <- c("chat_links","coll_id","conv_no","body","message_by","message_type_text","new_conv","node_data","detection_method","stop_logic_data",
+  columns <- c("chat_links","coll_id","conv_no","body","message_by","message_type_text","new_conv","last_node","detection_method","stop_logic_data",
                "story")
   data_df$chat_links <- paste0("<a href='",  data_df$chat_links, "' target='_blank'>See Chats</a>")
   data_show_df <- data_df[,columns]
@@ -152,7 +153,7 @@ dataoutput<-function(){
     df1 <- data_show_df[data_show_df$story==input$stories_input,]
   }
   if(!is.null(input$node)){
-    df2 <- df1[df1$node_data==input$node,]
+    df2 <- df1[df1$last_node==input$node,]
   }
   else{
     df2 <- df1

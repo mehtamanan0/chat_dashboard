@@ -42,7 +42,7 @@ shinyServer(function(input, output, session){
     unique_chats$sum <-1
     total_conv <- sum(unique_chats['sum'])
     stats_df_day <- group_by(stats_df_day,coll_id, conv_no)
-    stats_df_day <- summarize(stats_df_day,end_to_end_chats = as.integer(sum(end_to_end_chats)/length(end_to_end_chats)))
+    stats_df_day <- summarize(stats_df_day,end_to_end_chats = min(end_to_end_chats))
     end_end_conv <- round((sum(stats_df_day$end_to_end_chats)/total_conv)*100,2)
     return(end_end_conv)
   })
@@ -70,6 +70,15 @@ shinyServer(function(input, output, session){
     )
   })
   
+  break_conversations <- function(data_df){
+    stats_df <- stats_df_r()
+    stats_df_day <- stats_df[stats_df$date==as.character(input$date),]
+    stats_df_day <- group_by(stats_df_day,coll_id, conv_no)
+    stats_df_day <- summarize(stats_df_day,end_to_end_chats = min(end_to_end_chats),total_chats = 1)
+    break_df <- stats_df_day[stats_df_day$end_to_end_chats==0,]
+    data_df <- data_df[((data_df$coll_id %in% break_df$coll_id) & (data_df$conv_no %in% break_df$conv_no)),]
+    return(data_df)
+  }
 
 updateSelectInput(session, "stories", label = NULL, choices =as.character(unique(story_count$story)), selected = story_count$story[1])  # input$date and others are Date objects. When outputting
 updateSelectInput(session, "stories_input", label = NULL, choices =c("All",as.character(unique(data_df$story))), selected = "All")  # input$date and others are Date objects. When outputting
@@ -170,23 +179,24 @@ dataoutput<-function(){
   }
   break_message <- is_break_message()
   if(break_message){
-    df5 <- df4[df4$stop_logic_data %in% break_messages_type,]
+    df5 <- break_conversations(df4)
   }
   else{
-    if(input$stop_logic!="All"){
-      df5 <- df4[df4$stop_logic_data == input$stop_logic,]  
-    }
-    else{
-      df5 <- df4
-    }
+    df5 <- df4
+  }
+  if(input$stop_logic!="All"){
+      df6 <- df5[df5$stop_logic_data == input$stop_logic,]  
+  }
+  else{
+      df6 <- df5
   }
   columns <- c("chat_links","coll_id","conv_no","body","message_by","message_type_text","new_conv","last_node","detection_method","stop_logic_data",
                "story")
   if(input$include){
     columns <- c(columns, "prev_message", "second_prev_message", "next_message", "second_next_message")
   }
-  df5 <- df5[,columns]
-  return(df5)
+  df6 <- df6[,columns]
+  return(df6)
 }
 
 

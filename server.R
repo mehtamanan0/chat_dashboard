@@ -127,16 +127,6 @@ story_input <- reactive({
   
 })
 
-is_break_message <- reactive({
-  data_df <- data_df_r()
-  if(input$break_message){
-    updateSelectInput(session, "stop_logic", label = NULL, choices =c("All",break_messages_type), selected = "All") 
-  }  
-  else{
-    updateSelectInput(session, "stop_logic", label = NULL, choices =c("All",as.character(unique(data_df$stop_logic_data))), selected = "All") 
-  }
-  return(input$break_message)
-})
 
 node<- reactive({
   data_df <- data_df_r()
@@ -177,8 +167,8 @@ dataoutput<-function(){
   else{
     df4 <- df3
   }
-  break_message <- is_break_message()
-  if(break_message){
+ 
+  if(input$break_message){
     df5 <- break_conversations(df4)
   }
   else{

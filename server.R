@@ -38,12 +38,9 @@ shinyServer(function(input, output, session){
     stats_df <-stats_df_r()
     updateSelectInput(session, "stories", label = NULL, choices =as.character(unique(stats_df$story)), selected = stats_df$story[1])  # input$date and others are Date objects. When outputting
     stats_df_day <- stats_df[stats_df$date==as.character(input$date),]
-    unique_chats <- dcast(stats_df_day, coll_id + conv_no ~ "sum")
-    unique_chats$sum <-1
-    total_conv <- sum(unique_chats['sum'])
     stats_df_day <- group_by(stats_df_day,coll_id, conv_no)
-    stats_df_day <- summarize(stats_df_day,end_to_end_chats = min(end_to_end_chats))
-    end_end_conv <- round((sum(stats_df_day$end_to_end_chats)/total_conv)*100,2)
+    stats_df_day <- summarize(stats_df_day,end_to_end_chats = min(end_to_end_chats), total_chats=1)
+    end_end_conv <- round((sum(stats_df_day$end_to_end_chats)/sum(stats_df_day$total_chats))*100,2)
     return(end_end_conv)
   })
   ##########################################################################################################
@@ -76,7 +73,14 @@ shinyServer(function(input, output, session){
     stats_df_day <- group_by(stats_df_day,coll_id, conv_no)
     stats_df_day <- summarize(stats_df_day,end_to_end_chats = min(end_to_end_chats),total_chats = 1)
     break_df <- stats_df_day[stats_df_day$end_to_end_chats==0,]
-    data_df <- data_df[((data_df$coll_id %in% break_df$coll_id) & (data_df$conv_no %in% break_df$conv_no)),]
+    print("YAHooooooo")
+    break_df$coll_conv <-paste(break_df$coll_id,"_",break_df$conv_no) 
+    data_df$coll_conv <-paste(data_df$coll_id,"_",data_df$conv_no) 
+    data_df <- data_df[data_df$coll_conv %in% break_df$coll_conv, ]
+    data_df <- data_df %>%
+      group_by(coll_id,conv_no,message_by) %>%
+      slice(n()) %>%
+      ungroup
     return(data_df)
   }
 
@@ -155,30 +159,31 @@ dataoutput<-function(){
   else{
     df2 <- df1
   }
-  if(!is.null(input$message_by)){
-    df3 <- df2[df2$message_by==input$message_by,]
+  
+  if(input$new_conversation){
+    df3 <- df2[df2$new_conv=="True",]
   }
   else{
     df3 <- df2
   }
-  if(input$new_conversation){
-    df4 <- df3[df3$new_conv=="True",]
+ 
+  if(input$break_message){
+    df4 <- break_conversations(df3)
   }
   else{
     df4 <- df3
   }
- 
-  if(input$break_message){
-    df5 <- break_conversations(df4)
-  }
-  else{
-    df5 <- df4
-  }
   if(!is.null(input$stop_logic)){
-      df6 <- df5[df5$stop_logic_data %in% input$stop_logic,]  
+      df5 <- df4[df4$stop_logic_data %in% input$stop_logic,]  
   }
   else{
-      df6 <- df5
+      df5 <- df4
+  }
+  if(!is.null(input$message_by)){
+    df6 <- df5[df5$message_by==input$message_by,]
+  }
+  else{
+    df6 <- df5
   }
   columns <- c("chat_links","coll_id","conv_no","body","message_by","message_type_text","new_conv","last_node","detection_method","stop_logic_data",
                "story")

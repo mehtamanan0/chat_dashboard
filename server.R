@@ -5,7 +5,7 @@ shinyServer(function(input, output, session){
     data_df <- channel_data_df(as.character(input$date),input$channel)
     updateSelectInput(session, "stories_input", label = NULL, choices =c("All",as.character(unique(data_df$story))), selected = "All")  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$last_node)), selected = NULL)  # input$date and others are Date objects. When outputting
-    updateSelectInput(session, "stop_logic", label = NULL, choices =c("All",as.character(unique(data_df$stop_logic_data))), selected = NULL)  # input$date and others are Date objects. When outputting
+    updateSelectInput(session, "stop_logic", label = NULL, choices =as.character(unique(data_df$stop_logic_data)), selected = NULL)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "message_by", label = NULL, choices =as.character(unique(data_df$message_by)), selected = NULL)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "break_message_word_cloud", label = NULL, choices =c("All",as.character(unique(data_df$stop_logic_data))), selected = "All")  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df$node_data)), selected = as.character(data_df$node_data[1]))  # input$date and others are Date objects. When outputting
@@ -83,7 +83,7 @@ shinyServer(function(input, output, session){
 updateSelectInput(session, "stories", label = NULL, choices =as.character(unique(story_count$story)), selected = story_count$story[1])  # input$date and others are Date objects. When outputting
 updateSelectInput(session, "stories_input", label = NULL, choices =c("All",as.character(unique(data_df$story))), selected = "All")  # input$date and others are Date objects. When outputting
 updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$last_node)), selected = NULL)  # input$date and others are Date objects. When outputting
-updateSelectInput(session, "stop_logic", label = NULL, choices =c("All",as.character(unique(data_df$stop_logic_data))), selected = NULL)  # input$date and others are Date objects. When outputting
+updateSelectInput(session, "stop_logic", label = NULL, choices =as.character(unique(data_df$stop_logic_data)), selected = NULL)  # input$date and others are Date objects. When outputting
 updateSelectInput(session, "message_by", label = NULL, choices =as.character(unique(data_df$message_by)), selected = NULL)  # input$date and others are Date objects. When outputting
 
 updateSelectInput(session, "break_message_word_cloud", label = NULL, choices =c("All",as.character(unique(data_df$stop_logic_data))), selected = "All")  # input$date and others are Date objects. When outputting
@@ -150,7 +150,7 @@ dataoutput<-function(){
     df1 <- data_show_df[data_show_df$story==input$stories_input,]
   }
   if(!is.null(input$node)){
-    df2 <- df1[df1$last_node==input$node,]
+    df2 <- df1[df1$last_node %in% input$node,]
   }
   else{
     df2 <- df1
@@ -174,8 +174,8 @@ dataoutput<-function(){
   else{
     df5 <- df4
   }
-  if(input$stop_logic!="All"){
-      df6 <- df5[df5$stop_logic_data == input$stop_logic,]  
+  if(!is.null(input$stop_logic)){
+      df6 <- df5[df5$stop_logic_data %in% input$stop_logic,]  
   }
   else{
       df6 <- df5

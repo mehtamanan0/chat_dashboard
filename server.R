@@ -73,14 +73,22 @@ shinyServer(function(input, output, session){
     stats_df_day <- group_by(stats_df_day,coll_id, conv_no)
     stats_df_day <- summarize(stats_df_day,end_to_end_chats = min(end_to_end_chats),total_chats = 1)
     break_df <- stats_df_day[stats_df_day$end_to_end_chats==0,]
-    print("YAHooooooo")
     break_df$coll_conv <-paste(break_df$coll_id,"_",break_df$conv_no) 
     data_df$coll_conv <-paste(data_df$coll_id,"_",data_df$conv_no) 
     data_df <- data_df[data_df$coll_conv %in% break_df$coll_conv, ]
-    data_df <- data_df %>%
-      group_by(coll_id,conv_no,message_by) %>%
-      slice(n()) %>%
-      ungroup
+    data_df$bm <- 0
+    included <- c()
+    for(i in 2:nrow(data_df)){
+      if((data_df$message_by[i]=='Assistant') & (data_df$coll_conv[i]==data_df$coll_conv[i-1]) & !(data_df$coll_conv[i] %in% included)){
+        included <- c(included, data_df$coll_conv[i])
+        data_df$bm[i-1] <-1 
+      } 
+    }
+    data_df <- data_df[data_df$bm==1,]
+    #data_df <- data_df %>%
+    #  group_by(coll_id,conv_no,message_by) %>%
+    #  slice(n()) %>%
+    #  ungroup
     return(data_df)
   }
 
@@ -172,6 +180,12 @@ dataoutput<-function(){
   }
   else{
     df4 <- df3
+    if(!is.null(input$message_by)){
+      df4 <- df4[df4$message_by==input$message_by,]
+    }
+    else{
+      df4 <- df4
+    }
   }
   if(!is.null(input$stop_logic)){
       df5 <- df4[df4$stop_logic_data %in% input$stop_logic,]  
@@ -179,19 +193,14 @@ dataoutput<-function(){
   else{
       df5 <- df4
   }
-  if(!is.null(input$message_by)){
-    df6 <- df5[df5$message_by==input$message_by,]
-  }
-  else{
-    df6 <- df5
-  }
+ 
   columns <- c("chat_links","coll_id","conv_no","body","message_by","message_type_text","new_conv","last_node","detection_method","stop_logic_data",
                "story")
   if(input$include){
     columns <- c(columns, "prev_message", "second_prev_message", "next_message", "second_next_message")
   }
-  df6 <- df6[,columns]
-  return(df6)
+  df5 <- df5[,columns]
+  return(df5)
 }
 
 

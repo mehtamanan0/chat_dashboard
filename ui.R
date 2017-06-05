@@ -1,5 +1,9 @@
+dbHeader <- dashboardHeader(title="Gogi")
+#dbHeader$children[[2]]$children <-  tags$a(href='http://haptik.ai')
+#tags$img(src="images/logo.png",height='60',width='200'))
+
 dashboardPage(skin = "black",
-  dashboardHeader(title = "Gogi"),
+  dbHeader,
   dashboardSidebar(
     sidebarMenu(
     menuItem("Haptik", tabName = "haptik", icon = icon("cloud")),
@@ -7,7 +11,7 @@ dashboardPage(skin = "black",
               format = "yyyy-mm-dd", startview = "month", weekstart = 0,
               language = "en", width = NULL)
     ),
-    selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = c("flightschannel","trainschannel","cabschannel","rechargechannel","reminderschannel"))
+    selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = c("flightschannel","trainschannel","cabschannel","rechargechannel","reminderschannel","aroundmechannel"))
    
 ),
   dashboardBody(
@@ -101,6 +105,16 @@ dashboardPage(skin = "black",
                 ),
                 
               fluidRow(
+                #tabBox(
+                #  title = "Story and Node Level Analyis",
+                #  width="12",
+                #  # The id lets us use input$tabset1 on the server to find the current tab
+                #  id = "tabset1",
+                #  tabPanel("Stories Chat Analysis"  , tableOutput("table1")),
+                #  tabPanel("Node Chat Analysis",
+                #           selectInput('stories', 'Select Stories', multiple=FALSE, selectize=TRUE,choices = NULL,selected = NULL),
+                #           tableOutput("table3"))
+                #),
                 box(
                   title = "Stories Wise Chat Analysis", status = "primary", solidHeader = TRUE,
                   tableOutput("table1")

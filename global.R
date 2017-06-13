@@ -6,12 +6,19 @@ library(reshape)
 library(wordcloud)
 require('rCharts')
 library('dplyr')
+library(shinyjs)
 
 
 
 #DATA_DIRECTORY = '/home/ubuntu/dashboard_data/processed_data/'
 DATA_DIRECTORY = 'processed_data/'
 
+############ Needed to add View Buttons to table###########################
+viewCache <- function(df){
+  df$redis_cache <- paste0("<button id='button_",df$msg_id,"' type='button' class='btn btn-default action-button' onclick='Shiny.onInputChange(&quot;select_button&quot;,  this.id)'>View Cache</button>")
+  return(df)
+}
+###########################################################################
 
 ########## SQL CONNECTION ################################
 library(RSQLite)
@@ -25,7 +32,7 @@ con <- dbConnect(SQLite(), "/home/haptik/Downloads/mydb")
 #redisSelect(1)
 ##############################################################
 
-
+#get reddis cache
 get_redis_cache <- function(msg_id){
   redis_keys <- paste(":1:production|v1|ml_message|",msg_id,sep="")
   data <- redisGet(redis_keys)
@@ -33,7 +40,7 @@ get_redis_cache <- function(msg_id){
 }
 
 # read channel df
- channel_data_df <-function(date,channel){
+channel_data_df <-function(date,channel){
   duration <- start_end_time(date)
   query <- paste("SELECT * from data where channel='", channel,"' and created_at >= '",duration[1],"' and created_at <= '",duration[2],"'",sep="")
   res <- dbSendQuery(con, query)
@@ -45,7 +52,6 @@ get_redis_cache <- function(msg_id){
 channel_daily_stats_df <-function(channel, date){
   duration <- start_end_time(date)
   query <- paste("SELECT * from daily_analysis where channel='", channel,"' and created_at >= '",duration[1],"' and created_at <= '",duration[2],"'",sep="")
-  print(query)
   res <- dbSendQuery(con, query)
   channel_daily_stats_df <- fetch(res)
   return(channel_daily_stats_df)
@@ -76,7 +82,7 @@ break_messages_type<-c("True_no_nodes","True_trash_detected","True_nothing_chang
 
 
 #### Default columns to select##
-default_columns <- c("chat_links", "body", "story", "last_node", "domain_data", "stop_logic_data")
+default_columns <- c("chat_links", "body", "story", "last_node", "domain_data", "stop_logic_data","msg_id")
 
 ## Date filter
 date_filters <- c("Last 1 Hour", "Last 2 Hour", "Last 4 Hour", "Last 12 Hour", "Last day", "Last Week")

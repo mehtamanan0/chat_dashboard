@@ -226,6 +226,7 @@ shinyServer(function(input, output, session){
     filter = 'top',
     options = list(
       autoWidth = TRUE,
+      lengthChange = FALSE,
       columnDefs = list(list(width = '200px', targets = 1)),scrollX = TRUE
     ), escape = FALSE)
   

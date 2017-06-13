@@ -8,150 +8,56 @@ require('rCharts')
 library('dplyr')
 
 
-DATA_DIRECTORY = '/home/ubuntu/dashboard_data/processed_data/'
-#DATA_DIRECTORY = 'processed_data/'
+
+#DATA_DIRECTORY = '/home/ubuntu/dashboard_data/processed_data/'
+DATA_DIRECTORY = 'processed_data/'
 
 
-# channel
-channel<-reactive({
-  channel <-input$channel})
+########## SQL CONNECTION ################################
+library(RSQLite)
+con <- dbConnect(SQLite(), "/home/haptik/Downloads/mydb")
+##########################################################
 
-# date
-date<- reactive({
-  date<-input$date})
 
-# get date string for today
-get_today_date_string <- function(){
-  format(Sys.time(), "%Y-%m-%d")
-}
+################## Redis Connection ###########################
+#library(rredis)
+#redisConnect(host = "redis.haptikdev.com", port=6379)
+#redisSelect(1)
+##############################################################
 
-# get data filename for given channel
-get_data_filename_for_channel<-function(date,channel){
-  filename <- paste0(DATA_DIRECTORY, date,'-',channel,'-data.csv')
-  return(filename)
-}
 
-# get daily stats filename for channel
-get_data_analysis_filename<-function(channel){
-  filename <- paste0(DATA_DIRECTORY, channel,'-daily_analysis.csv')
-  return(filename)
+get_redis_cache <- function(msg_id){
+  redis_keys <- paste(":1:production|v1|ml_message|",msg_id,sep="")
+  data <- redisGet(redis_keys)
+  return(data)
 }
 
 # read channel df
-channel_data_df <-function(date,channel){
-  channel_data_filename <- get_data_filename_for_channel(date, channel)
-  channel_data_df <- read.csv(channel_data_filename)
+ channel_data_df <-function(date,channel){
+  duration <- start_end_time(date)
+  query <- paste("SELECT * from data where channel='", channel,"' and created_at >= '",duration[1],"' and created_at <= '",duration[2],"'",sep="")
+  res <- dbSendQuery(con, query)
+  channel_data_df <- fetch(res)
   channel_data_df$body = as.character(channel_data_df$body)
-  channel_data_df$count <- 1
   return(channel_data_df)
 }
 
-channel_daily_stats_df <-function(channel){
-  channel_daily_stats_filename <- get_data_analysis_filename(channel)
-  channel_daily_stats_df <- read.csv(channel_daily_stats_filename)
+channel_daily_stats_df <-function(channel, date){
+  duration <- start_end_time(date)
+  query <- paste("SELECT * from daily_analysis where channel='", channel,"' and created_at >= '",duration[1],"' and created_at <= '",duration[2],"'",sep="")
+  print(query)
+  res <- dbSendQuery(con, query)
+  channel_daily_stats_df <- fetch(res)
   return(channel_daily_stats_df)
 }
 
-####################### dataframe ########################
-#channels data
-data_df <- channel_data_df(as.character(Sys.Date()-2),"flightschannel")
-
-
-# daily stats for given channel
-stats_df <-channel_daily_stats_df("flightschannel")
-
-# daily stats df for given date 
-stats_df_day <- stats_df[stats_df$date==as.character(Sys.Date()-2),]
-############################################################
-
-
-
-#################### Show data table ########################## 
-columns <- c("chat_links","coll_id","conv_no","body","message_by","message_type_text","new_conv","node_data","detection_method","stop_logic_data",
-             "story")
-
-data_df$chat_links <- paste0("<a href='",  data_df$chat_links, "' target='_blank'>See Chats</a>")
-data_show_df <- data_df[,columns]
-################################################################
-
-min_date_range <- as.Date(Sys.time()) - 10
-stats_df$date = strftime(stats_df$date,"%d/%m/%Y")
-daily_stats = stats_df[stats_df$date >= min_date_range,]
-daily_stats <- group_by(stats_df, date)
-daily_stats <- summarize(daily_stats, users_count = mean(users_count, na.rm = T), total_chats = sum (total_chats, 
-                        na.rm = T),end_to_end_chats = round((sum(end_to_end_chats)/sum(total_chats))*100,2))
-plot <- data.frame(date=daily_stats$date,conversation=daily_stats$total_chats,users=daily_stats$users_count,gogo_automation=daily_stats$end_to_end_chats)
-
-
-######################## story_wise_analysis ###################
-#conv_story <- dcast(data_df,coll_id + conv_no + story + breaked_conv ~ "count1",value.var = "count", fun.aggregate = sum)
-#conv_story$count1 <- 1
-#story_count <- dcast(conv_story, story + breaked_conv ~"value", value.var = "count1", fun.aggregate = sum)
-#story_count <- story_count[story_count$story!="",]
-#story_count <- cast(story_count, story~breaked_conv,sum)
-
-#story_count$False = as.numeric(story_count$False) 
-#story_count$True = as.numeric(story_count$True)
-#story_count$total_conv <- story_count$False + story_count$True
-#story_count$gogo_automation <- (story_count$False/story_count$total_conv)*100
-#story_count <- plyr::rename(story_count, c("False"="#Gogo Chat", "True"="#Chats Breaked","total_conv" = "Total Conversations","gogo_automation"="%Gogo Automate"))
-#columns <- c("story","Total Conversations","#Gogo Chat","#Chats Breaked","%Gogo Automate")
-#story_count <- story_count[,columns] 
-#story_count <- story_count[order(-story_count$`Total Conversations`),]
-story_count <- stats_df_day
-story_count <- group_by(story_count,coll_id,conv_no, story)
-story_count <- summarize(story_count,total_chats = 1,end_to_end_chats = min(end_to_end_chats))
-
-story_count <- group_by(story_count, story)
-story_count <- summarize(story_count,total_chats = sum(total_chats),end_to_end_chats = sum(end_to_end_chats))
-
-
-story_count$end_to_end_chats <- round((story_count$end_to_end_chats/story_count$total_chats)*100,2)
-story_count <- data.frame(story=story_count$story,conversation=story_count$total_chats,gogo_automation=story_count$end_to_end_chats)
-columns <- c("story","Total Conversations","%Gogo Automate")
-story_count <- plyr::rename(story_count, c("conversation"="Total Conversations","gogo_automation"="%Gogo Automate"))
-story_count <- story_count[,columns] 
-story_count <- story_count[order(-story_count$`Total Conversations`),]
-
-##########################################################################
-
-
-
-############################### Sub story wise analysis ####################
-#conv_story2 <- dcast(data_df,coll_id + conv_no + story + node_data + breaked_conv ~ "count1",value.var = "count", fun.aggregate = sum)
-#conv_story2$count1 <- 1
-#story_count2 <- dcast(conv_story2, story + node_data + breaked_conv ~"value", value.var = "count1", fun.aggregate = sum)
-#story_count2 <- cast(story_count2, story+node_data~breaked_conv,sum)
-#story_count2 <- story_count2[story_count2$node_data!="",]
-
-#story_count2$False = as.numeric(story_count2$False) 
-#story_count2$True = as.numeric(story_count2$True)
-#story_count2$total_conv <- story_count2$False + story_count2$True
-#story_count2$gogo_automation <- (story_count2$False/story_count2$total_conv)*100
-#columns <- c("story","Node","Total Conversations","#Gogo Chat","#Chats Breaked","%Gogo Automate")
-#story_count2 <- plyr::rename(story_count2, c("node_data"="Node","False"="#Gogo Chat", "True"="#Chats Breaked","total_conv" = "Total Conversations","gogo_automation"="%Gogo Automate"))
-#story_count2 <- story_count2[,columns] 
-#story_count2 <- story_count2[order(-story_count2$`Total Conversations`),]
-
-story_count2 <- stats_df_day
-story_count2 <- group_by(story_count2, coll_id, conv_no, story, node)
-story_count2 <- summarize(story_count2,total_chats = 1,end_to_end_chats = min(end_to_end_chats))
-
-story_count2 <- group_by(story_count2, story, node)
-story_count2 <- summarize(story_count2,total_chats = sum(total_chats),end_to_end_chats = sum(end_to_end_chats))
-
-story_count2$end_to_end_chats <- round((story_count2$end_to_end_chats/story_count2$total_chats)*100,2)
-story_count2 <- data.frame(story=story_count2$story,node=story_count2$node,conversation=story_count2$total_chats,gogo_automation=story_count2$end_to_end_chats)
-columns <- c("story","Node","Total Conversations","%Gogo Automate")
-story_count2 <- plyr::rename(story_count2, c("node"="Node","conversation"="Total Conversations","gogo_automation"="%Gogo Automate"))
-story_count2 <- story_count2[,columns] 
-story_count2 <- story_count2[order(-story_count2$`Total Conversations`),]
-
-
-
-##############################################################################
-
-
+channel_daily_stats_df_for_plot <-function(channel, date){
+  duration <- stats_start_end_time(date)
+  query <- paste("SELECT * from daily_analysis where channel='", channel,"' and created_at >= '",duration[1],"' and created_at <= '",duration[2],"'",sep="")
+  res <- dbSendQuery(con, query)
+  channel_daily_stats_df_for_plot <- fetch(res)
+  return(channel_daily_stats_df_for_plot)
+}
 
 
 ######## wordcloud#################
@@ -167,3 +73,63 @@ wordcloudentity<-function(freq.df)
 #####break message type
 break_messages_type<-c("True_no_nodes","True_trash_detected","True_nothing_changed","True_negation")
 ##########
+
+
+#### Default columns to select##
+default_columns <- c("chat_links", "body", "story", "last_node", "domain_data", "stop_logic_data")
+
+## Date filter
+date_filters <- c("Last 1 Hour", "Last 2 Hour", "Last 4 Hour", "Last 12 Hour", "Last day", "Last Week")
+
+start_end_time<-function(date){
+  hour = 3600
+  curr_time <- as.POSIXlt(Sys.time())
+  curr_time$min <- 0
+  curr_time$sec <- 0 
+  if(date=="Last 1 Hour"){
+    start_time <- curr_time- hour*1
+    end_time <- curr_time - hour*0
+  }
+  else if(date=="Last 2 Hour"){
+    start_time <- curr_time- hour*2
+    end_time <- curr_time - hour*0
+  }
+  else if(date=="Last 4 Hour"){
+    start_time <- curr_time- hour*4
+    end_time <- curr_time - hour*0
+  }
+  else if(date=="Last 12 Hour"){
+    start_time <- curr_time- hour*12
+    end_time <- curr_time - hour*0
+  }
+  else if(date=="Last day"){
+    curr_day =  as.Date(curr_time)
+    start_time = curr_day -1
+    end_time <- curr_day
+  }
+  else if(date=="Last Week"){
+    curr_day =  as.Date(curr_time)
+    start_time = curr_day -8
+    end_time <- curr_day
+  }
+  return(c(start_time, end_time))
+}
+
+stats_start_end_time <- function(date){
+  hour = 3600
+  curr_time <- as.POSIXlt(Sys.time())
+  curr_time$min <- 0
+  curr_time$sec <- 0 
+  if(date %in% c('Last 1 Hour','Last 2 Hour','Last 4 Hour','Last 12 Hour')){
+    start_time <- curr_time- hour*12
+    end_time <- curr_time - hour*0
+  }
+  else {
+    curr_day =  as.Date(curr_time)
+    start_time = curr_day - 8
+    end_time <- curr_day
+  }
+  return(c(start_time, end_time))
+  
+}
+

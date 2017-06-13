@@ -1,4 +1,4 @@
-dbHeader <- dashboardHeader(title="Gogi")
+dbHeader <- dashboardHeader(title="Teja : Gogo ka baap")
 #dbHeader$children[[2]]$children <-  tags$a(href='http://haptik.ai')
 #tags$img(src="images/logo.png",height='60',width='200'))
 
@@ -7,9 +7,11 @@ dashboardPage(skin = "black",
   dashboardSidebar(
     sidebarMenu(
     menuItem("Haptik", tabName = "haptik", icon = icon("cloud")),
-    dateInput('date', 'Select date for analysis', value = as.character(Sys.Date()-2) , min = NULL, max = NULL,
-              format = "yyyy-mm-dd", startview = "month", weekstart = 0,
-              language = "en", width = NULL)
+    selectInput('date', 'Whar Happens in', multiple=FALSE, selectize=TRUE,choices = date_filters)
+    
+    #dateInput('date', 'Select date for analysis', value = as.character(Sys.Date()-5) , min = NULL, max = NULL,
+    #          format = "yyyy-mm-dd", startview = "month", weekstart = 0,
+    #          language = "en", width = NULL)
     ),
     selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = c("flightschannel","trainschannel","cabschannel","rechargechannel","reminderschannel","aroundmechannel"))
    
@@ -134,10 +136,11 @@ dashboardPage(skin = "black",
                     selectInput('stories_input', 'Select Story', multiple=FALSE, selectize=TRUE,choices = NULL),
                     selectInput('node', 'Select Node', multiple=TRUE, selectize=TRUE,choices = NULL),
                     selectInput('stop_logic', 'Select Stop Logic', multiple=TRUE, selectize=TRUE,choices = NULL),
+                    selectInput('message_type', 'Select Message Type', multiple=TRUE, selectize=TRUE,choices = NULL),
                     selectInput('message_by', 'Message By', multiple=FALSE, selectize=TRUE,choices = NULL),
+                    selectInput('include', 'Select Columns', multiple=TRUE,selectize=TRUE, choices=NULL),
                     checkboxInput('new_conversation', 'New Convesation only', value = FALSE, width = NULL),
-                    checkboxInput('break_message', 'Select Break Message Only', value = FALSE, width = NULL),
-                    checkboxInput('include', 'Show Previous and Next Messages', value = FALSE, width = NULL)
+                    checkboxInput('break_message', 'Select Break Message Only', value = FALSE, width = NULL)
                     )
                 #box(
                 #  title = "Top Questions",width = "9",

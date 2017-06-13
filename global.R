@@ -77,7 +77,7 @@ wordcloudentity<-function(freq.df)
 
 
 #####break message type
-break_messages_type<-c("True_no_nodes","True_trash_detected","True_nothing_changed","True_negation")
+break_messages_type<-c("True_no_nodes","True_trash_detected","True_nothing_changed","True_negation","True_botbreak")
 ##########
 
 

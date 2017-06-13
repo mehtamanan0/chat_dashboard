@@ -162,7 +162,7 @@ dashboardPage(skin = "black",
                             box(title="Filters",width="3", solidHeader = TRUE,status = "warning",height = "465",
                                 selectInput('ngram', 'Choose Ngram', multiple=FALSE, selectize=TRUE,choices = c("Bigram","Trigram","Unigram")),
                                 selectInput('node_word_cloud', 'Select Node', multiple=FALSE, selectize=TRUE,choices = NULL),
-                                selectInput('break_message_word_cloud', 'Select Break Logic', selectize=TRUE,choices = NULL,multiple=FALSE))
+                                selectInput('break_message_word_cloud', 'Select Break Logic', selectize=TRUE,choices = NULL,multiple=TRUE))
                             
                           )
                   )

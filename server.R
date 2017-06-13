@@ -9,7 +9,7 @@ shinyServer(function(input, output, session){
     updateSelectInput(session, "message_type", label = NULL, choices =as.character(unique(data_df$message_type_text)), selected = NULL)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "message_by", label = NULL, choices =as.character(unique(data_df$message_by)), selected = "User")  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "include", label = NULL, choices = names(data_df), selected = default_columns)  # input$date and others are Date objects. When outputting
-    updateSelectInput(session, "break_message_word_cloud", label = NULL, choices =c("All",as.character(unique(data_df$stop_logic_data))), selected = "All")  # input$date and others are Date objects. When outputting
+    updateSelectInput(session, "break_message_word_cloud", label = NULL, choices =as.character(unique(data_df$stop_logic_data)), selected =break_messages_type )  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df$last_node)), selected = as.character(data_df$last_node[1]))  # input$date and others are Date objects. When outputting
     data_df[c("last_node")][is.na(data_df[c("last_node")])] <- "No Nodes"
     data_df[] <- lapply(data_df, factor)
@@ -111,7 +111,7 @@ shinyServer(function(input, output, session){
   updateSelectInput(session, "message_type", label = NULL, choices =as.character(unique(data_df$message_type_text)), selected = NULL)  # input$date and others are Date objects. When outputting
   updateSelectInput(session, "message_by", label = NULL, choices =as.character(unique(data_df$message_by)), selected = "User")  # input$date and others are Date objects. When outputting
   updateSelectInput(session, "include", label = NULL, choices = names(data_df), selected = default_columns)  # input$date and others are Date objects. When outputting
-  updateSelectInput(session, "break_message_word_cloud", label = NULL, choices =c("All",as.character(unique(data_df$stop_logic_data))), selected = "All")  # input$date and others are Date objects. When outputting
+  updateSelectInput(session, "break_message_word_cloud", label = NULL, choices =as.character(unique(data_df$stop_logic_data)), selected = break_messages_type)  # input$date and others are Date objects. When outputting
   updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df$last_node)), selected = as.character(data_df$last_node[1]))  # input$date and others are Date objects. When outputting
   
   
@@ -338,7 +338,7 @@ shinyServer(function(input, output, session){
     else{
       df2<-df1
     }
-    if(breakmessage != "All") {
+    if(!is.null(breakmessage)) {
       df3 <- df2[df2$stop_logic_data == breakmessage,]
     }
     else{

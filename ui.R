@@ -125,11 +125,11 @@ dashboardPage(skin = "black",
                               tableOutput("table3")
                             ),
                             box(
-                              downloadButton('downloadData', 'Download'),
+                              div(align = "left",downloadButton(downloadButton('downloadData', 'Download'),style = "background-color:#a9cce3")),
                               width="9",DT::dataTableOutput("table2"),status = "primary", solidHeader = TRUE),
                             #dataTableOutput("table2"),
                             
-                            box(title="Filters",width="3", solidHeader = TRUE,status = "warning",height = "830",
+                            box(title="Filters",width="3", solidHeader = TRUE,status = "warning",height = "816",
                                 selectInput('stories_input', 'Select Story', multiple=FALSE, selectize=TRUE,choices = NULL),
                                 selectInput('node', 'Select Node', multiple=TRUE, selectize=TRUE,choices = NULL),
                                 selectInput('stop_logic', 'Select Stop Logic', multiple=TRUE, selectize=TRUE,choices = NULL),

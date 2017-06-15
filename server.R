@@ -10,7 +10,9 @@ shinyServer(function(input, output, session){
     updateSelectInput(session, "message_by", label = NULL, choices =as.character(unique(data_df$message_by)), selected = "User")  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "include", label = NULL, choices = names(data_df), selected = default_columns)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "break_message_word_cloud", label = NULL, choices =as.character(unique(data_df$stop_logic_data)), selected =break_messages_type )  # input$date and others are Date objects. When outputting
-    updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df$last_node)), selected = as.character(data_df$last_node[1]))  # input$date and others are Date objects. When outputting
+    updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df$last_node)), selected = NULL)  # input$date and others are Date objects. When outputting
+    updateSelectInput(session, "stop_logic_story", label = NULL, choices =c("All",(as.character(unique(data_df$story)))), selected = "All")  # input$date and others are Date objects. When outputting
+    
     data_df[c("last_node")][is.na(data_df[c("last_node")])] <- "No Nodes"
     data_df[] <- lapply(data_df, factor)
     return(data_df)
@@ -103,19 +105,7 @@ shinyServer(function(input, output, session){
     data_df <- data_df[data_df$msg_id %in% data_df_break$msg_id,]
     return(data_df)
   }
-  
-  updateSelectInput(session, "stories", label = NULL, choices =as.character(unique(story_count$story)), selected = story_count$story[1])  # input$date and others are Date objects. When outputting
-  updateSelectInput(session, "stories_input", label = NULL, choices =c("All",as.character(unique(data_df$story))), selected = "All")  # input$date and others are Date objects. When outputting
-  updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$last_node)), selected = NULL)  # input$date and others are Date objects. When outputting
-  updateSelectInput(session, "stop_logic", label = NULL, choices =as.character(unique(data_df$stop_logic_data)), selected = NULL)  # input$date and others are Date objects. When outputting
-  updateSelectInput(session, "message_type", label = NULL, choices =as.character(unique(data_df$message_type_text)), selected = NULL)  # input$date and others are Date objects. When outputting
-  updateSelectInput(session, "message_by", label = NULL, choices =as.character(unique(data_df$message_by)), selected = "User")  # input$date and others are Date objects. When outputting
-  updateSelectInput(session, "include", label = NULL, choices = names(data_df), selected = default_columns)  # input$date and others are Date objects. When outputting
-  updateSelectInput(session, "break_message_word_cloud", label = NULL, choices =as.character(unique(data_df$stop_logic_data)), selected = break_messages_type)  # input$date and others are Date objects. When outputting
-  updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df$last_node)), selected = as.character(data_df$last_node[1]))  # input$date and others are Date objects. When outputting
-  
-  
-  
+
   datos<- function(){
     story_ <- input$stories
     stats_df_sub_story <-stats_df_r()
@@ -158,6 +148,15 @@ shinyServer(function(input, output, session){
     }
     else{
       updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df[data_df$story==input$stories_input,]$last_node)), selected =NULL)  # input$date and others are Date objects. When outputting
+    }})
+  
+  stop_logic_node<- reactive({
+    data_df <- data_df_r()
+    if(input$stop_logic_story=="All"){
+      updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df$last_node)), selected =NULL )  # input$date and others are Date objects. When outputting
+    }
+    else{
+      updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df[data_df$story==input$stop_logic_story,]$last_node)), selected =as.character(unique(data_df[data_df$story==input$stop_logic_story,]$last_node)))  # input$date and others are Date objects. When outputting
     }})
   
   dataoutput<-function(){
@@ -254,13 +253,16 @@ shinyServer(function(input, output, session){
       write.csv(dataoutput(), file)
     })
   
-  
+
   output$chart <- renderChart({
     stats_df_plot <-stats_df_plot()
     if(input$date %in% c('Last 1 Hour','Last 2 Hour','Last 4 Hour','Last 12 Hour')){
-      stats_df_plot$created_at <- as.POSIXlt(stats_df_plot$created_at)
+      stats_df_plot$created_at <- as.POSIXlt(stats_df_plot$created_at, format="%Y-%m-%d %H")
       stats_df_plot$hour <- stats_df_plot$created_at$hour
+      #stats_df_plot <- change_to_am_pm(stats_df_plot)
       stats_df_plot$date <- stats_df_plot$hour
+      #stats_df_plot$date <- format(strptime(stats_df_plot$created_at, format='%Y-%m-%d %H:%M:%S'), '%I %p')
+      
     }
     else{
       stats_df_plot$date <- as.Date(stats_df_plot$created_at)
@@ -279,14 +281,13 @@ shinyServer(function(input, output, session){
     
     plot <- data.frame(date=daily_stats$date,conversation=daily_stats$total_chats,users=daily_stats$users_count,gogo_automation=daily_stats$end_to_end_chats, atlest_one_response=daily_stats$total_chats_atleast_one_response )
     plot$users <- as.integer(plot$users)
-    
-    print(plot)
+  
     
     h <- Highcharts$new()
     h$chart(zoomType="xy")
     h$title(text="Channel Performance - Last 7 Days")
     h$subtitle(text="Total Conversations, Total Users Present, % Gogo Automation on daily basis")
-    h$xAxis(categories = as.character(plot$date),crosshair = TRUE)
+    h$xAxis(categories = as.character(plot$date))
     h$yAxis(list(list(title = list(text = 'Conversation',style = list(color = "#4572A7")),labels=list(style = list(color = "#4572A7")))
                  , list(labels=list(style = list(color = "#89A54E")),title = list(text = 'Users',style = list(color = "#89A54E")), opposite = TRUE)
                  , list(labels=list(style = list(color = "#AA4643")),title = list(text = '% Gogo Automation',style = list(color = "#AA4643")), opposite = TRUE))
@@ -331,9 +332,10 @@ shinyServer(function(input, output, session){
   )
   
   get_word_cloud_table <- function(ngram,node,breakmessage){
+    stop_logic_node()
     data_df <- data_df_r()
     df1 <- data_df[data_df$message_by=="User",]
-    if(node != "All") {
+    if(!is.null(node)) {
       df2 <- df1[df1$last_node %in% node,]
     }
     else{
@@ -381,11 +383,34 @@ shinyServer(function(input, output, session){
   output$wordTable <-renderTable(
     get_word_cloud_table(ngram(),input$node_word_cloud,input$break_message_word_cloud),include.rownames=FALSE,digits=0)
   
-  output$pie_plot <- renderChart({  
+  #total story break
+  mdata <-reactive({
+    data_df <- data_df_r()
+    if(input$stop_logic_story=="All"){
+      b<-dcast(data_df,story+stop_logic_data~"")
+      mdata<-b[b$stop_logic_data %in% input$break_message_word_cloud,]
+      mdata <-dcast(mdata, story~stop_logic_data)
+    }
+    else{
+      b<-dcast(data_df,last_node+stop_logic_data~"")
+      b<-b[b$last_node %in% input$node_word_cloud,]
+      mdata<-b[b$stop_logic_data %in% input$break_message_word_cloud,]
+      mdata <-dcast(mdata, last_node~stop_logic_data)
+      mdata<- plyr::rename(mdata, c("last_node"="story"))
+    }
+    return(mdata)
+    })
+  
+  output$pie_plot <- renderChart({ 
+    stop_logic_node()
+    bar_data <- mdata()
     a <- Highcharts$new()  
-    a$title(text='Break Messages')  
-    a$data(x=c('Intent','NER','Stoplogic'),y=c(15, 20, 30),type="pie",name="No of tweets")  
-    a$addParams(dom = "pie_plot")  
+    a$title(text='Break Messages')
+    a$chart(type = "column")
+    a$xAxis(categories=bar_data$story)
+    a$data(bar_data)  
+    a$addParams(dom = "pie_plot")
+    a$plotOptions(series=list(stacking="normal"))
     return(a)
   })
 })

@@ -22,7 +22,7 @@ viewCache <- function(df){
 
 ########## SQL CONNECTION ################################
 library(RSQLite)
-con <- dbConnect(SQLite(), "/home/haptik/Downloads/mydb")
+con <- dbConnect(SQLite(), "/home/manan/Downloads/mydb")
 ##########################################################
 
 
@@ -85,7 +85,7 @@ break_messages_type<-c("True_no_nodes","True_trash_detected","True_nothing_chang
 default_columns <- c("chat_links", "body", "story", "last_node", "domain_data", "stop_logic_data","msg_id")
 
 ## Date filter
-date_filters <- c("Last 1 Hour", "Last 2 Hour", "Last 4 Hour", "Last 12 Hour", "Last day", "Last Week")
+date_filters <- c("Last 1 Hour", "Last 2 Hour", "Last 4 Hour", "Last 12 Hour", "Yesterday", "Last Week")
 
 start_end_time<-function(date){
   hour = 3600
@@ -108,7 +108,7 @@ start_end_time<-function(date){
     start_time <- curr_time- hour*12
     end_time <- curr_time - hour*0
   }
-  else if(date=="Last day"){
+  else if(date=="Yesterday"){
     curr_day =  as.Date(curr_time)
     start_time = curr_day -1
     end_time <- curr_day

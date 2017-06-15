@@ -19,6 +19,7 @@ dashboardPage(skin = "black",
                            ".shiny-output-error:before { visibility: hidden; }"
                 ),
                 
+                
                 tags$head(  tags$script(src = "https://code.highcharts.com/modules/funnel.js"),
                             
                             tags$style(HTML('
@@ -154,14 +155,14 @@ dashboardPage(skin = "black",
                               width="9",
                               # The id lets us use input$tabset1 on the server to find the current tab
                               id = "tabset1",
-                              tabPanel("Wordcloud"  , plotOutput("wordcloud_plot")),
+                              tabPanel("Wordcloud",selectInput('ngram', 'Choose Ngram', multiple=FALSE, selectize=TRUE,choices = c("Bigram","Trigram","Unigram")), plotOutput("wordcloud_plot")),
                               tabPanel("WordTable",tableOutput("wordTable")),
                               tabPanel("New Vocabulory"),
                               tabPanel("Message break analysis",chartOutput("pie_plot","highcharts"))
                             ),
-                            box(title="Filters",width="3", solidHeader = TRUE,status = "warning",height = "465",
-                                selectInput('ngram', 'Choose Ngram', multiple=FALSE, selectize=TRUE,choices = c("Bigram","Trigram","Unigram")),
-                                selectInput('node_word_cloud', 'Select Node', multiple=FALSE, selectize=TRUE,choices = NULL),
+                            box(title="Filters",width="3", solidHeader = TRUE,status = "warning",
+                                selectInput('stop_logic_story', 'Select Story', multiple=FALSE, selectize=TRUE,choices = NULL),
+                                selectInput('node_word_cloud', 'Select Node', multiple=TRUE, selectize=TRUE,choices = NULL),
                                 selectInput('break_message_word_cloud', 'Select Break Logic', selectize=TRUE,choices = NULL,multiple=TRUE))
                             
                           )

@@ -22,7 +22,7 @@ viewCache <- function(df){
 
 ########## SQL CONNECTION ################################
 library(RSQLite)
-con <- dbConnect(SQLite(), "/home/manan/Downloads/mydb")
+con <- dbConnect(SQLite(), "/home/haptik/Downloads/mydb")
 ##########################################################
 
 

@@ -168,7 +168,6 @@ dashboardPage(skin = "black",
                           )
                   )
                   
-                  
                   # Boxes need to be put in a row (or column)
                   
                 )

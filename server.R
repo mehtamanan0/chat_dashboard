@@ -50,7 +50,6 @@ shinyServer(function(input, output, session){
     return(end_end_conv)
   })
   
-  
   #total gogo automation
   atleast_one_conv <-reactive({ 
     stats_df <-stats_df_r()
@@ -132,15 +131,19 @@ shinyServer(function(input, output, session){
     return(df)
   }
   
-  output$table3 =  renderTable(
-    datos(),digits = 0,include.rownames=FALSE
+  output$table3 =   renderDataTable(
+    datos(),options = list(
+      autoWidth = TRUE,
+      lengthChange = FALSE,
+      iDisplayLength=10,
+      sDom  = '<"top">lrt<"bottom">ip',
+      columnDefs = list(list(width = '200px', targets = 1))
+    )
   )
   story_input <- reactive({
     story_input <- input$stories_input
     
   })
-  
-  
   node<- reactive({
     data_df <- data_df_r()
     if(input$stories_input=="All"){
@@ -220,7 +223,7 @@ shinyServer(function(input, output, session){
   }
   
   
-  output$table2 =  DT::renderDataTable(
+  output$table2 = DT::renderDataTable(
     dataoutput(),class = 'cell-border stripe',rownames = FALSE,
     filter = 'top',
     options = list(
@@ -327,10 +330,16 @@ shinyServer(function(input, output, session){
     return(story_count)
   })
   
-  output$table1 =  renderTable(
-    story_count(),digits = 0,include.rownames=FALSE
+  output$table1 =  renderDataTable(
+    story_count(),
+    options = list(
+      iDisplayLength= 11,
+      autoWidth = TRUE,
+      sDom  = '<"top">lrt<"bottom">ip',
+      lengthChange = FALSE,
+      columnDefs = list(list(width = '200px', targets = 1))
+    ), escape = FALSE
   )
-  
   get_word_cloud_table <- function(ngram,node,breakmessage){
     stop_logic_node()
     data_df <- data_df_r()
@@ -387,7 +396,8 @@ shinyServer(function(input, output, session){
   mdata <-reactive({
     data_df <- data_df_r()
     if(input$stop_logic_story=="All"){
-      b<-dcast(data_df,story+stop_logic_data~"")
+      b<-dcast(data_df,story+stop_logic_data~"count")
+      b<-b[b$count>15,]
       mdata<-b[b$stop_logic_data %in% input$break_message_word_cloud,]
       mdata <-dcast(mdata, story~stop_logic_data)
     }

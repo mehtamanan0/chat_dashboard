@@ -1,10 +1,15 @@
-dbHeader <- dashboardHeader(title= img(src='./logo.png',height='50',width='160'))
+dbHeader <- dashboardHeader(title= img(src='./logo.png',height='50',width='160'),dropdownMenu(type = "tasks", badgeStatus = "success",
+                                                                                              taskItem(value ="output.final" 
+                                                                                               , color = "green",
+                                                                                                       "GOGO automation"
+                                                                                              )
+))
 dashboardPage(skin = "black",
               dbHeader,
               dashboardSidebar(
                 sidebarMenu(
                   menuItem("Haptik", tabName = "haptik", icon = icon("cloud")),
-                  selectInput('date', 'Whar Happens in', multiple=FALSE, selectize=TRUE,choices = date_filters)
+                  selectInput('date', 'What Happens in', multiple=FALSE, selectize=TRUE,choices = date_filters)
                   
                   #dateInput('date', 'Select date for analysis', value = as.character(Sys.Date()-5) , min = NULL, max = NULL,
                   #          format = "yyyy-mm-dd", startview = "month", weekstart = 0,
@@ -21,7 +26,7 @@ dashboardPage(skin = "black",
                 
                 
                 tags$head(  tags$script(src = "https://code.highcharts.com/modules/funnel.js"),
-                            
+                            tags$head(tags$style(HTML("input[type='search']:disabled {visibility:hidden}"))),
                             tags$style(HTML('
                                             
                                             /* main sidebar */
@@ -116,14 +121,14 @@ dashboardPage(skin = "black",
                             #           tableOutput("table3"))
                             #),
                             box(
-                              title = "Stories Wise Chat Analysis", status = "primary", solidHeader = TRUE,
-                              tableOutput("table1")
+                              title = "Stories Wise Chat Analysis", status = "primary", solidHeader = TRUE,height = 650,
+                              dataTableOutput("table1"),tags$style(type="text/css", '#table1 tfoot {display:none;}')
                             ),
                             
                             box(
-                              title = "Sub Story Wise Chat Analysis", status = "primary", solidHeader = TRUE,
+                              title = "Sub Story Wise Chat Analysis", status = "primary", solidHeader = TRUE,height = 650,
                               selectInput('stories', 'Select Stories', multiple=FALSE, selectize=TRUE,choices = NULL,selected = NULL),
-                              tableOutput("table3")
+                              dataTableOutput("table3"),tags$style(type="text/css", '#table3 tfoot {display:none;}')
                             ),
                             box(
                               div(align = "left",downloadButton(downloadButton('downloadData', 'Download'),style = "background-color:#a9cce3")),

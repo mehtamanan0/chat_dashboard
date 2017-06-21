@@ -10,8 +10,8 @@ dashboardPage(skin = "black",
                   #          format = "yyyy-mm-dd", startview = "month", weekstart = 0,
                   #          language = "en", width = NULL)
                 ),
-                selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = c("flightschannel","trainschannel","cabschannel","rechargechannel","reminderschannel","aroundmechannel"))
-                
+                selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = c("flightschannel","trainschannel","cabschannel","rechargechannel","reminderschannel","aroundmechannel")),
+                img(src='./tejalogo.png',height=220,width=220,style="margin-top:180px;margin-left:5px;opacity:0.2;")
               ),
               dashboardBody(
                 tags$style(type="text/css",
@@ -59,6 +59,14 @@ dashboardPage(skin = "black",
                                             .box.box-solid.box-primary
                                             {
                                             border: 1px solid #C0C0C0;
+                                            }
+                                            div.box-body div#table1{
+                                             height: 50vh;
+                                            overflow-y: auto;
+                                            }
+                                            div.box-body div#table3{
+                                             height: 40vh;
+                                            overflow-y: auto;
                                             }
                                             span.info-box-text{
                                             color:#7e7e7e;

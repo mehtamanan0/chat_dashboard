@@ -1,4 +1,3 @@
-
 shinyServer(function(input, output, session){
   
   data_df_r <- reactive({
@@ -100,8 +99,8 @@ shinyServer(function(input, output, session){
       } 
     }
     data_df_break <- data_df_break[data_df_break$bm==1,]
-    data_df <- data_df[data_df$msg_id %in% data_df_break$msg_id,]
-    return(data_df)
+    #data_df <- data_df[data_df$msg_id %in% data_df_break$msg_id,]
+    return(data_df_break)
   }
   
   updateSelectInput(session, "stories", label = NULL, choices =as.character(unique(story_count$story)), selected = story_count$story[1])  # input$date and others are Date objects. When outputting
@@ -227,7 +226,7 @@ shinyServer(function(input, output, session){
     options = list(
       autoWidth = TRUE,
       lengthChange = FALSE,
-      columnDefs = list(list(width = '200px', targets = 1)),scrollX = TRUE
+      columnDefs = list(list(width = '200px', targets = 1),list(targets = c(0,-1), searchable = FALSE)),scrollX = TRUE
     ), escape = FALSE)
   
   msg_id <- reactive({
@@ -254,13 +253,16 @@ shinyServer(function(input, output, session){
       write.csv(dataoutput(), file)
     })
   
-  
+
   output$chart <- renderChart({
     stats_df_plot <-stats_df_plot()
     if(input$date %in% c('Last 1 Hour','Last 2 Hour','Last 4 Hour','Last 12 Hour')){
-      stats_df_plot$created_at <- as.POSIXlt(stats_df_plot$created_at)
+      stats_df_plot$created_at <- as.POSIXlt(stats_df_plot$created_at, format="%Y-%m-%d %H")
       stats_df_plot$hour <- stats_df_plot$created_at$hour
+      #stats_df_plot <- change_to_am_pm(stats_df_plot)
       stats_df_plot$date <- stats_df_plot$hour
+      #stats_df_plot$date <- format(strptime(stats_df_plot$created_at, format='%Y-%m-%d %H:%M:%S'), '%I %p')
+      
     }
     else{
       stats_df_plot$date <- as.Date(stats_df_plot$created_at)
@@ -268,25 +270,24 @@ shinyServer(function(input, output, session){
     daily_stats <- stats_df_plot[c("date","coll_id","conv_no","total_chats","end_to_end_chats","users_count","total_chats_atleast_one_response")]
     
     daily_stats <- group_by(daily_stats,date , coll_id, conv_no)
-    daily_stats <- summarize(daily_stats,users_count = mean(users_count, na.rm = T), end_to_end_chats = min(end_to_end_chats),
+    daily_stats <- summarize(daily_stats,users_count = max(users_count, na.rm = T), end_to_end_chats = min(end_to_end_chats),
                              total_chats_atleast_one_response = max(total_chats_atleast_one_response),
                              total_chats=1)
     
     daily_stats <- group_by(daily_stats, date)
-    daily_stats <- summarize(daily_stats, users_count = mean(users_count, na.rm = T), total_chats = sum (total_chats, na.rm = T),
+    daily_stats <- summarize(daily_stats, users_count = sum(users_count, na.rm = T), total_chats = sum (total_chats, na.rm = T),
                              total_chats_atleast_one_response = sum(total_chats_atleast_one_response, na.rm=T),
                              end_to_end_chats = round((sum(end_to_end_chats)/sum(total_chats))*100,2))
     
     plot <- data.frame(date=daily_stats$date,conversation=daily_stats$total_chats,users=daily_stats$users_count,gogo_automation=daily_stats$end_to_end_chats, atlest_one_response=daily_stats$total_chats_atleast_one_response )
     plot$users <- as.integer(plot$users)
-    
-    print(plot)
+  
     
     h <- Highcharts$new()
     h$chart(zoomType="xy")
-    h$title(text="Channel Performance - Last 7 Days")
-    h$subtitle(text="Total Conversations, Total Users Present, % Gogo Automation on daily basis")
-    h$xAxis(categories = as.character(plot$date),crosshair = TRUE)
+    h$title(text="Performance - Past Days/Hours")
+    h$subtitle(text="Total Conversations, Total Users Present, % Gogo Automation on daily/hourly basis")
+    h$xAxis(categories = as.character(plot$date))
     h$yAxis(list(list(title = list(text = 'Conversation',style = list(color = "#4572A7")),labels=list(style = list(color = "#4572A7")))
                  , list(labels=list(style = list(color = "#89A54E")),title = list(text = 'Users',style = list(color = "#89A54E")), opposite = TRUE)
                  , list(labels=list(style = list(color = "#AA4643")),title = list(text = '% Gogo Automation',style = list(color = "#AA4643")), opposite = TRUE))
@@ -330,6 +331,7 @@ shinyServer(function(input, output, session){
     story_count(),digits = 0,include.rownames=FALSE
   )
   
+
   get_word_cloud_table <- function(ngram,node,breakmessage){
     data_df <- data_df_r()
     df1 <- data_df[data_df$message_by=="User",]

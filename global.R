@@ -22,7 +22,6 @@ viewCache <- function(df){
 ########## SQL CONNECTION ################################
 library(RMySQL)
 con = dbConnect(MySQL(), user='haptik', password='Batman1305', dbname='mogambo_reporting', host='haptik-staging-3-read-replica.ckfxzl3qckrk.ap-south-1.rds.amazonaws.com')
-
 #con <- dbConnect(SQLite(), "/home/haptik/Downloads/mydb")
 ##########################################################
 
@@ -33,39 +32,6 @@ con = dbConnect(MySQL(), user='haptik', password='Batman1305', dbname='mogambo_r
 #redisSelect(1)
 ##############################################################
 
-#get reddis cache
-get_redis_cache <- function(msg_id){
-  redis_keys <- paste(":1:production|v1|ml_message|",msg_id,sep="")
-  data <- redisGet(redis_keys)
-  return(data)
-}
-
-# read channel df
-channel_data_df <-function(date,channel){
-  duration <- start_end_time(date)
-  query <- paste("SELECT * from data where channel='", channel,"' and created_at >= '",duration[1],"' and created_at <= '",duration[2],"';",sep="")
-  res <- dbGetQuery(con, query)
-  channel_data_df <- res
-  channel_data_df$body = as.character(channel_data_df$body)
-  return(channel_data_df)
-}
-
-channel_daily_stats_df <-function(channel, date){
-  duration <- start_end_time(date)
-  print(duration)
-  query <- paste("SELECT * from daily_analysis where channel='", channel,"' and created_at >= '",duration[1],"' and created_at <= '",duration[2],"'",sep="")
-  res <- dbGetQuery(con, query)
-  channel_daily_stats_df <- res
-  return(channel_daily_stats_df)
-}
-
-channel_daily_stats_df_for_plot <-function(channel, date){
-  duration <- stats_start_end_time(date)
-  query <- paste("SELECT * from daily_analysis where channel='", channel,"' and created_at >= '",duration[1],"' and created_at <= '",duration[2],"'",sep="")
-  res <- dbGetQuery(con, query)
-  channel_daily_stats_df_for_plot <- res
-  return(channel_daily_stats_df_for_plot)
-}
 
 
 ######## wordcloud#################

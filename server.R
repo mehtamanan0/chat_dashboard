@@ -1,5 +1,40 @@
 shinyServer(function(input, output, session){
   
+  
+  #get reddis cache
+  get_redis_cache <- function(msg_id){
+    redis_keys <- paste(":1:production|v1|ml_message|",msg_id,sep="")
+    data <- redisGet(redis_keys)
+    return(data)
+  }
+  
+  # read channel df
+  channel_data_df <-function(date,channel){
+    duration <- start_end_time(date)
+    query <- paste("SELECT * from data where channel='", channel,"' and created_at >= '",duration[1],"' and created_at <= '",duration[2],"';",sep="")
+    res <- dbGetQuery(con, query)
+    channel_data_df <- res
+    channel_data_df$body = as.character(channel_data_df$body)
+    return(channel_data_df)
+  }
+  
+  channel_daily_stats_df <-function(channel, date){
+    duration <- start_end_time(date)
+    query <- paste("SELECT * from daily_analysis where channel='", channel,"' and created_at >= '",duration[1],"' and created_at <= '",duration[2],"'",sep="")
+    print(query)
+    res <- dbGetQuery(con, query)
+    channel_daily_stats_df <- res
+    return(channel_daily_stats_df)
+  }
+  
+  channel_daily_stats_df_for_plot <-function(channel, date){
+    duration <- stats_start_end_time(date)
+    query <- paste("SELECT * from daily_analysis where channel='", channel,"' and created_at >= '",duration[1],"' and created_at <= '",duration[2],"'",sep="")
+    res <- dbGetQuery(con, query)
+    channel_daily_stats_df_for_plot <- res
+    return(channel_daily_stats_df_for_plot)
+  }
+  
   data_df_r <- reactive({
     data_df <- channel_data_df(input$date,input$channel)
     updateSelectInput(session, "stories_input", label = NULL, choices =c("All",as.character(unique(data_df$story))), selected = "All")  # input$date and others are Date objects. When outputting

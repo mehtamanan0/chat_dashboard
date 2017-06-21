@@ -8,6 +8,8 @@ require('rCharts')
 library('dplyr')
 library(shinyjs)
 
+Sys.setenv(TZ="Asia/Kolkata")
+
 percent <- reactive({ 
  end_end_conv()
 })
@@ -30,8 +32,8 @@ con = dbConnect(MySQL(), user='haptik', password='Batman1305', dbname='mogambo_r
 
 ################## Redis Connection ###########################
 library(rredis)
-#redisConnect(host = "gogoredis.haptikprod.com", port=6379)
-#redisSelect(2)
+redisConnect(host = "", port=6379)
+redisSelect(1)
 ##############################################################
 
 
@@ -56,7 +58,7 @@ date_filters <- c("Last 1 Hour", "Last 2 Hour", "Last 4 Hour", "Last 12 Hour", "
 
 start_end_time<-function(date){
   hour = 3600
-  curr_time <- as.POSIXlt(Sys.time())
+  # curr_time <- as.POSIXlt(Sys.time())
   curr_time$min <- 0
   curr_time$sec <- 0 
   if(date=="Last 1 Hour"){

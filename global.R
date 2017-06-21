@@ -8,7 +8,9 @@ require('rCharts')
 library('dplyr')
 library(shinyjs)
 
-
+percent <- reactive({ 
+ end_end_conv()
+})
 #DATA_DIRECTORY = '/home/ubuntu/dashboard_data/processed_data/'
 DATA_DIRECTORY = 'processed_data/'
 

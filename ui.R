@@ -4,7 +4,7 @@ dashboardPage(skin = "black",
               dashboardSidebar(
                 sidebarMenu(
                   menuItem("Haptik", tabName = "haptik", icon = icon("cloud")),
-                  selectInput('date', 'Whar Happens in', multiple=FALSE, selectize=TRUE,choices = date_filters)
+                  selectInput('date', 'What Happens in', multiple=FALSE, selectize=TRUE,choices = date_filters)
                   
                   #dateInput('date', 'Select date for analysis', value = as.character(Sys.Date()-5) , min = NULL, max = NULL,
                   #          format = "yyyy-mm-dd", startview = "month", weekstart = 0,
@@ -19,8 +19,9 @@ dashboardPage(skin = "black",
                            ".shiny-output-error:before { visibility: hidden; }"
                 ),
                 
+                
                 tags$head(  tags$script(src = "https://code.highcharts.com/modules/funnel.js"),
-                            
+                            tags$head(tags$style(HTML("input[type='search']:disabled {visibility:hidden}"))),
                             tags$style(HTML('
                                             
                                             /* main sidebar */
@@ -162,14 +163,14 @@ dashboardPage(skin = "black",
                               width="9",
                               # The id lets us use input$tabset1 on the server to find the current tab
                               id = "tabset1",
-                              tabPanel("Wordcloud"  , plotOutput("wordcloud_plot")),
+                              tabPanel("Wordcloud",selectInput('ngram', 'Choose Ngram', multiple=FALSE, selectize=TRUE,choices = c("Bigram","Trigram","Unigram")), plotOutput("wordcloud_plot")),
                               tabPanel("WordTable",tableOutput("wordTable")),
                               tabPanel("New Vocabulory"),
                               tabPanel("Message break analysis",chartOutput("pie_plot","highcharts"))
                             ),
-                            box(title="Filters",width="3", solidHeader = TRUE,status = "warning",height = "465",
-                                selectInput('ngram', 'Choose Ngram', multiple=FALSE, selectize=TRUE,choices = c("Bigram","Trigram","Unigram")),
-                                selectInput('node_word_cloud', 'Select Node', multiple=FALSE, selectize=TRUE,choices = NULL),
+                            box(title="Filters",width="3", solidHeader = TRUE,status = "warning",
+                                selectInput('stop_logic_story', 'Select Story', multiple=FALSE, selectize=TRUE,choices = NULL),
+                                selectInput('node_word_cloud', 'Select Node', multiple=TRUE, selectize=TRUE,choices = NULL),
                                 selectInput('break_message_word_cloud', 'Select Break Logic', selectize=TRUE,choices = NULL,multiple=TRUE))
                             
                           )

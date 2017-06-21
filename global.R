@@ -30,8 +30,8 @@ con = dbConnect(MySQL(), user='haptik', password='Batman1305', dbname='mogambo_r
 
 ################## Redis Connection ###########################
 library(rredis)
-redisConnect(host = "gogoredis.haptikprod.com", port=6379)
-redisSelect(2)
+#redisConnect(host = "gogoredis.haptikprod.com", port=6379)
+#redisSelect(2)
 ##############################################################
 
 

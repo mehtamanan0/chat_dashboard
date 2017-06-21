@@ -166,7 +166,7 @@ dashboardPage(skin = "black",
                               tabPanel("Message break analysis",chartOutput("pie_plot","highcharts"),
                               tabPanel("Wordcloud",selectInput('ngram', 'Choose Ngram', multiple=FALSE, selectize=TRUE,choices = c("Bigram","Trigram","Unigram")), plotOutput("wordcloud_plot")),
                               tabPanel("WordTable",tableOutput("wordTable")),
-                              tabPanel("New Vocabulory"),
+                              tabPanel("New Vocabulory")
                              )
                             ),
                             box(title="Filters",width="3", solidHeader = TRUE,status = "warning",

@@ -275,7 +275,7 @@ shinyServer(function(input, output, session){
     return(index)})
   
   SelectedRow <- eventReactive(input$select_button,{
-    msg_id()
+    get_redis_cache(msg_id())
   })
   
   

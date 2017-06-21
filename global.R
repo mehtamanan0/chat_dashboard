@@ -32,8 +32,8 @@ con = dbConnect(MySQL(), user='haptik', password='Batman1305', dbname='mogambo_r
 
 ################## Redis Connection ###########################
 library(rredis)
-redisConnect(host = "", port=6379)
-redisSelect(1)
+#redisConnect(host = "", port=6379)
+#redisSelect(1)
 ##############################################################
 
 
@@ -58,7 +58,7 @@ date_filters <- c("Last 1 Hour", "Last 2 Hour", "Last 4 Hour", "Last 12 Hour", "
 
 start_end_time<-function(date){
   hour = 3600
-  # curr_time <- as.POSIXlt(Sys.time())
+  curr_time <- as.POSIXlt(Sys.time())
   curr_time$min <- 0
   curr_time$sec <- 0 
   if(date=="Last 1 Hour"){
@@ -108,3 +108,9 @@ stats_start_end_time <- function(date){
   
 }
 
+get_all_channel<-function(){
+  query <- "select distinct(channel) from daily_analysis"
+  res<-dbSendQuery(con,query)
+  data<-fetch(res,-1)
+  return(data$channel)
+}

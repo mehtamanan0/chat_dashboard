@@ -1,6 +1,6 @@
 shinyServer(function(input, output, session){
   
-  
+  updateSelectInput(session, "channel", label = NULL, choices =get_all_channel(), selected = "flightschannel")  # input$date and others are Date objects. When outputting
   #get reddis cache
   get_redis_cache <- function(msg_id){
     redis_keys <- paste(":1:production|v1|ml_message|",msg_id,sep="")
@@ -12,7 +12,6 @@ shinyServer(function(input, output, session){
   channel_data_df <-function(date,channel){
     duration <- start_end_time(date)
     query <- paste("SELECT * from data where channel='", channel,"' and created_at >= '",duration[1],"' and created_at <= '",duration[2],"';",sep="")
-    print(query)
     res <- dbSendQuery(con, query)
     channel_data_df <- fetch(res, n=-1)
     channel_data_df$body = as.character(channel_data_df$body)
@@ -22,7 +21,6 @@ shinyServer(function(input, output, session){
   channel_daily_stats_df <-function(channel, date){
     duration <- start_end_time(date)
     query <- paste("SELECT * from daily_analysis where channel='", channel,"' and created_at >= '",duration[1],"' and created_at <= '",duration[2],"';",sep="")
-    print(query)
     res <- dbSendQuery(con, query)
     channel_daily_stats_df <- fetch(res,n=-1)
     return(channel_daily_stats_df)

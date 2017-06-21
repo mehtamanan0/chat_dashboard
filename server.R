@@ -281,7 +281,7 @@ shinyServer(function(input, output, session){
   
   observeEvent(input$select_button, {
     showModal(modalDialog(
-      paste("This is an important message!",SelectedRow(),sep="--"),
+      paste("Redis Cache",SelectedRow(),sep="--"),
       easyClose = TRUE
     ))
     

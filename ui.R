@@ -12,7 +12,7 @@ dashboardPage(skin = "black",
                   #          format = "yyyy-mm-dd", startview = "month", weekstart = 0,
                   #          language = "en", width = NULL)
                 ),
-                selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = get_all_channel()),
+                selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = NULL),
                 img(src='./tejalogo.png',height=220,width=220,style="margin-top:180px;margin-left:5px;opacity:0.2;")
               ),
               dashboardBody(

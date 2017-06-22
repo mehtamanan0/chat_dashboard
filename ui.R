@@ -1,4 +1,6 @@
-dbHeader <- dashboardHeader(title= img(src='./logo.png',height='50',width='160'))
+dbHeader <- dashboardHeader(title= "Teja: Gogo Ki Report", tags$li(class = "dropdown",
+                                                                   tags$a(href="http://haptik.ai", target="_blank", 
+                                                                          tags$img(height = "20px", alt="", src="./logo.png"))))
 dashboardPage(skin = "black",
               dbHeader,
               dashboardSidebar(
@@ -62,7 +64,7 @@ dashboardPage(skin = "black",
                                             border: 1px solid #C0C0C0;
                                             }
                                             div.box-body div#table1{
-                                             height: 50vh;
+                                             height: 51.75vh;
                                             overflow-y: auto;
                                             }
                                             div.box-body div#table3{
@@ -134,7 +136,7 @@ dashboardPage(skin = "black",
                               tableOutput("table3")
                             ),
                             box(
-                              div(align = "left",downloadButton(downloadButton('downloadData', 'Download'),style = "background-color:#a9cce3")),
+                              div(align = "left",downloadButton('downloadData', 'Download CSV',style = "background-color:#a9cce3")),
                               width="9",DT::dataTableOutput("table2"),status = "primary", solidHeader = TRUE),
                             #dataTableOutput("table2"),
                             

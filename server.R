@@ -3,9 +3,8 @@ shinyServer(function(input, output, session){
   updateSelectInput(session, "channel", label = NULL, choices =get_all_channel(), selected = "flightschannel")  # input$date and others are Date objects. When outputting
   #get reddis cache
   get_redis_cache <- function(msg_id){
-    redis_keys <- paste(":1:production|v1|ml_message|",msg_id,sep="")
-    data <- redisGet(redis_keys)
-    return(data)
+    cache_data = prettify(python.call("get_cache",as.character(msg_id)))
+    return(cache_data)
   }
   
   # read channel df
@@ -233,33 +232,34 @@ shinyServer(function(input, output, session){
     }
     else{
       df4 <- df3
-      if(!is.null(input$message_by)){
-        df4 <- df4[df4$message_by==input$message_by,]
-      }
-      else{
-        df4 <- df4
-      }
     }
-    if(!is.null(input$stop_logic)){
-      df5 <- df4[df4$stop_logic_data %in% input$stop_logic,]  
+    if(!is.null(input$message_by)){
+        df5 <- df4[df4$message_by==input$message_by,]
     }
     else{
-      df5 <- df4
+        df5 <- df4
     }
-    if(!is.null(input$message_type)){
-      df6 <- df5[df5$message_type_text %in% input$message_type,]  
+    
+    if(!is.null(input$stop_logic)){
+      df6 <- df5[df5$stop_logic_data %in% input$stop_logic,]  
     }
     else{
       df6 <- df5
+    }
+    if(!is.null(input$message_type)){
+      df7 <- df6[df6$message_type_text %in% input$message_type,]  
+    }
+    else{
+      df7 <- df6
     }
     
     #columns <- c("chat_links","coll_id","conv_no","body","message_by","message_type_text","new_conv","last_node","detection_method","stop_logic_data",
     #             "story")
     columns <- input$include
     #columns <- c(columns, "prev_message", "second_prev_message", "next_message", "second_next_message")
-    df6 <- df6[,columns]
-    df6 <- viewCache(df6)
-    return(df6)
+    df7 <- df7[,columns]
+    df7 <- viewCache(df7)
+    return(df7)
   }
   
   
@@ -279,7 +279,7 @@ shinyServer(function(input, output, session){
   
   observeEvent(input$select_button, {
     showModal(modalDialog(
-      paste("Redis Cache",SelectedRow(),sep="--"),
+      paste("Redis Cache",SelectedRow(),sep="-->"),
       easyClose = TRUE
     ))
     

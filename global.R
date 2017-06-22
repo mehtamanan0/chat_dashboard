@@ -7,6 +7,8 @@ library(wordcloud)
 require('rCharts')
 library('dplyr')
 library(shinyjs)
+library(jsonlite)
+library(rPython)
 
 Sys.setenv(TZ="Asia/Kolkata")
 
@@ -26,7 +28,6 @@ viewCache <- function(df){
 ########## SQL CONNECTION ################################
 library(RMySQL)
 con = dbConnect(MySQL(), user='haptik', password='Batman1305', dbname='mogambo_reporting', host='haptik-staging-3-read-replica.ckfxzl3qckrk.ap-south-1.rds.amazonaws.com')
-#con <- dbConnect(SQLite(), "/home/haptik/Downloads/mydb")
 ##########################################################
 
 
@@ -114,3 +115,7 @@ get_all_channel<-function(){
   data<-fetch(res,-1)
   return(data$channel)
 }
+
+python_redis_scripts ="def get_cache(msg_id):\n\timport json\n\timport redis\n\timport pickle\n\tcon=redis.Redis(host='',port=6379,db=2)\n\tmsg_id_key=':1:production|v1|ml_message|'+msg_id\n\ta=pickle.loads(con.get(msg_id_key))\n\treturn str(a)" 
+python.exec(python_redis_scripts)
+

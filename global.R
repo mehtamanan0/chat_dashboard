@@ -9,6 +9,7 @@ library('dplyr')
 library(shinyjs)
 library(jsonlite)
 library(elastic)
+library(DT)
 
 
 source("elastic_data.R")

@@ -22,7 +22,7 @@ shinyServer(function(input, output, session){
     updateSelectInput(session, "stop_logic_story", label = NULL, choices =c("All",(as.character(unique(data_df$story)))), selected = "All")  # input$date and others are Date objects. When outputting
     
     data_df[c("last_nodes")][is.na(data_df[c("last_nodes")])] <- "No Nodes"
-    data_df[] <- lapply(data_df, factor)
+    data_df[c("story")][is.na(data_df[c("last_nodes")])] <- "No Story"
     return(data_df)
   })
   stats_df_r <-reactive({
@@ -122,7 +122,7 @@ shinyServer(function(input, output, session){
     story_count2 <- group_by(story_count2, story, node)
     story_count2 <- summarize(story_count2,total_chats = sum(total_chats),end_to_end_gogo_chat = sum(end_to_end_gogo_chat))
     
-    story_count2$end_to_end_chats <- round((story_count2$end_to_end_gogo_chat/story_count2$total_chats)*100,2)
+    story_count2$end_to_end_gogo_chat <- round((story_count2$end_to_end_gogo_chat/story_count2$total_chats)*100,2)
     story_count2 <- data.frame(story=story_count2$story,node=story_count2$node,conversation=story_count2$total_chats,gogo_automation=story_count2$end_to_end_gogo_chat)
     columns <- c("story","Node","Total Conversations","%Gogo Automate")
     story_count2 <- plyr::rename(story_count2, c("node"="Node","conversation"="Total Conversations","gogo_automation"="%Gogo Automate"))
@@ -180,9 +180,8 @@ shinyServer(function(input, output, session){
   dataoutput<-function(){
     node()
     data_df <- data_df_r()
-    data_df$chat_links <- paste0("<a href='",  data_df$chat_links, "' target='_blank'>See Chats</a>")
+    data_df$chat_link <- paste0("<a href='",  data_df$chat_link, "' target='_blank'>See Chats</a>")
     data_show_df <- data_df
-    
     if(input$stories_input=="All"){
       df1 = data_show_df
     }
@@ -234,7 +233,7 @@ shinyServer(function(input, output, session){
     return(df7)
   }
   
-  output$table2 =  DT::renderDataTable(
+  output$table2 =  renderDataTable(
     dataoutput(),class = 'cell-border stripe',rownames = FALSE,
     filter = 'top',
     options = list(
@@ -334,7 +333,7 @@ shinyServer(function(input, output, session){
     story_count <- summarize(story_count,total_chats = sum(total_chats),end_to_end_gogo_chat = sum(end_to_end_gogo_chat))
     
     
-    story_count$end_to_end_chats <- round((story_count$end_to_end_gogo_chat/story_count$total_chats)*100,2)
+    story_count$end_to_end_gogo_chat <- round((story_count$end_to_end_gogo_chat/story_count$total_chats)*100,2)
     story_count <- data.frame(story=story_count$story,conversation=story_count$total_chats,gogo_automation=story_count$end_to_end_gogo_chat)
     columns <- c("story","Total Conversations","%Gogo Automate")
     story_count <- plyr::rename(story_count, c("conversation"="Total Conversations","gogo_automation"="%Gogo Automate"))

@@ -8,15 +8,12 @@ require('rCharts')
 library('dplyr')
 library(shinyjs)
 library(jsonlite)
-library(rPython)
+library(elastic)
 
-Sys.setenv(TZ="Asia/Kolkata")
 
-percent <- reactive({ 
- end_end_conv()
-})
-#DATA_DIRECTORY = '/home/ubuntu/dashboard_data/processed_data/'
-DATA_DIRECTORY = 'processed_data/'
+source("elastic_data.R")
+source("config.R")
+
 
 ############ Needed to add View Buttons to table###########################
 viewCache <- function(df){
@@ -25,19 +22,47 @@ viewCache <- function(df){
 }
 ###########################################################################
 
-########## SQL CONNECTION ################################
-library(RMySQL)
-con = dbConnect(MySQL(), user='haptik', password='Batman1305', dbname='mogambo_reporting', host='haptik-staging-3-read-replica.ckfxzl3qckrk.ap-south-1.rds.amazonaws.com')
-##########################################################
+# Elastic Connection
+connect(es_host = ELASTIC_AWS_HOST, es_path = "", es_port = ELASTIC_PORT, es_transport_schema  = "https")
+
+date_convertion_to_IST <- function(date_string){
+  date_string <- strftime(strptime(date_string, format="%Y-%m-%dT%H:%MZ"),"%Y-%m-%d %H:%M:%S")
+  utc_date_dtring <- as.POSIXct(date_string, tz="UTC")
+  ist_date_string <- format(utc_date_dtring, tz="Asia/Kolkata",usetz=TRUE)
+  ist_date_string<- strftime(ist_date_string, "%Y-%m-%d %H:%M:%S")
+  return(ist_date_string)
+}
 
 
-################## Redis Connection ###########################
-library(rredis)
-#redisConnect(host = "", port=6379)
-#redisSelect(1)
-##############################################################
+# read channel df
+channel_data_df <-function(date,channel){
+  duration <- start_end_time(date)
+  query <- message_query_generator(channel, duration[1], duration[2])
+  channel_data_df <- elastic_get_data(MESSAGE_KINESIS_INDEX, MESSAGE_KINESIS_TYPE, query, 1000)
+  channel_data_df$created_at <- date_convertion_to_IST(channel_data_df$created_at)
+  channel_data_df <- plyr::rename(channel_data_df, c("business_via_name"="channel"))
+  return(channel_data_df)
+}
 
+channel_daily_stats_df <-function(channel, date){
+  duration <- start_end_time(date)
+  query <- stats_query_generator(channel, duration[1], duration[2])
+  channel_daily_stats_df <- elastic_get_data(STATS_KINESIS_INDEX, STATS_KINESIS_TYPE, query, 1000)
+  channel_daily_stats_df$created_at <- date_convertion_to_IST(channel_daily_stats_df$created_at)
+  channel_daily_stats_df <- plyr::rename(channel_daily_stats_df, c("business_via_name"="channel"))
+  channel_daily_stats_df <- plyr::rename(channel_daily_stats_df, c("conversation_no"="conv_no"))
+  return(channel_daily_stats_df)
+}
 
+channel_daily_stats_df_for_plot <-function(channel, date){
+  duration <- stats_start_end_time(date)
+  query <- stats_query_generator(channel, duration[1], duration[2])
+  channel_daily_stats_df_for_plot <- elastic_get_data(STATS_KINESIS_INDEX, STATS_KINESIS_TYPE, query, 1000)
+  channel_daily_stats_df_for_plot$created_at <- date_convertion_to_IST(channel_daily_stats_df_for_plot$created_at)
+  channel_daily_stats_df_for_plot <- plyr::rename(channel_daily_stats_df_for_plot, c("business_via_name"="channel"))
+  channel_daily_stats_df_for_plot <- plyr::rename(channel_daily_stats_df_for_plot, c("conversation_no"="conv_no"))
+  return(channel_daily_stats_df_for_plot)
+}
 
 ######## wordcloud#################
 wordcloudentity<-function(freq.df)
@@ -52,31 +77,29 @@ break_messages_type<-c("True_no_nodes","True_trash_detected","True_nothing_chang
 
 
 #### Default columns to select##
-default_columns <- c("chat_links", "body", "story", "last_node", "domain_data", "stop_logic_data","msg_id")
+default_columns <- c("chat_link", "body", "story", "last_nodes", "predicted_domain", "stop_logic_data","message_id")
 
 ## Date filter
-date_filters <- c("Last 1 Hour", "Last 2 Hour", "Last 4 Hour", "Last 12 Hour", "Yesterday", "Last Week")
+date_filters <- c("Last 12 Hour", "Last 2 Hour", "Last 4 Hour", "Last 1 Hour", "Yesterday", "Last Week")
 
 start_end_time<-function(date){
   hour = 3600
-  curr_time <- as.POSIXlt(Sys.time())
-  curr_time$min <- 0
-  curr_time$sec <- 0 
+  
   if(date=="Last 1 Hour"){
-    start_time <- curr_time- hour*2
-    end_time <- curr_time - hour*1
+    end_time = strftime((as.POSIXlt(Sys.time(), "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
+    start_time = strftime((as.POSIXlt(Sys.time()-hour*1, "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
   }
   else if(date=="Last 2 Hour"){
-    start_time <- curr_time- hour*3
-    end_time <- curr_time - hour*1
+    end_time = strftime((as.POSIXlt(Sys.time(), "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
+    start_time = strftime((as.POSIXlt(Sys.time()-hour*2, "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
   }
   else if(date=="Last 4 Hour"){
-    start_time <- curr_time- hour*5
-    end_time <- curr_time - hour*1
+    end_time = strftime((as.POSIXlt(Sys.time(), "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
+    start_time = strftime((as.POSIXlt(Sys.time()-hour*4, "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
   }
   else if(date=="Last 12 Hour"){
-    start_time <- curr_time- hour*13
-    end_time <- curr_time - hour*1
+    end_time = strftime((as.POSIXlt(Sys.time(), "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
+    start_time = strftime((as.POSIXlt(Sys.time()-hour*12, "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
   }
   else if(date=="Yesterday"){
     curr_day =  as.Date(curr_time)
@@ -97,8 +120,8 @@ stats_start_end_time <- function(date){
   curr_time$min <- 0
   curr_time$sec <- 0 
   if(date %in% c('Last 1 Hour','Last 2 Hour','Last 4 Hour','Last 12 Hour')){
-    start_time <- curr_time- hour*12
-    end_time <- curr_time - hour*0
+    end_time = strftime((as.POSIXlt(Sys.time(), "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
+    start_time = strftime((as.POSIXlt(Sys.time()-hour*12, "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
   }
   else {
     curr_day =  as.Date(curr_time)
@@ -106,16 +129,8 @@ stats_start_end_time <- function(date){
     end_time <- curr_day
   }
   return(c(start_time, end_time))
-  
 }
 
-get_all_channel<-function(){
-  query <- "select distinct(channel) from daily_analysis"
-  res<-dbSendQuery(con,query)
-  data<-fetch(res,-1)
-  return(data$channel)
-}
 
-python_redis_scripts ="def get_cache(msg_id):\n\timport json\n\timport redis\n\timport pickle\n\tcon=redis.Redis(host='',port=6379,db=2)\n\tmsg_id_key=':1:production|v1|ml_message|'+msg_id\n\ta=pickle.loads(con.get(msg_id_key))\n\treturn str(a)" 
-python.exec(python_redis_scripts)
+
 

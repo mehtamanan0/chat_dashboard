@@ -1,51 +1,27 @@
 shinyServer(function(input, output, session){
   
-  updateSelectInput(session, "channel", label = NULL, choices =get_all_channel(), selected = "flightschannel")  # input$date and others are Date objects. When outputting
-  #get reddis cache
   get_redis_cache <- function(msg_id){
-    cache_data = prettify(python.call("get_cache",as.character(msg_id)))
+    cache_data <- data_df[data_df$message_id==msg_id,]$message_cache[1]
+    if(is.null(cache_data)){
+      cache_data = 'No Cache Found'
+    }
     return(cache_data)
   }
   
-  # read channel df
-  channel_data_df <-function(date,channel){
-    duration <- start_end_time(date)
-    query <- paste("SELECT * from data where channel='", channel,"' and created_at >= '",duration[1],"' and created_at <= '",duration[2],"';",sep="")
-    res <- dbSendQuery(con, query)
-    channel_data_df <- fetch(res, n=-1)
-    channel_data_df$body = as.character(channel_data_df$body)
-    return(channel_data_df)
-  }
-  
-  channel_daily_stats_df <-function(channel, date){
-    duration <- start_end_time(date)
-    query <- paste("SELECT * from daily_analysis where channel='", channel,"' and created_at >= '",duration[1],"' and created_at <= '",duration[2],"';",sep="")
-    res <- dbSendQuery(con, query)
-    channel_daily_stats_df <- fetch(res,n=-1)
-    return(channel_daily_stats_df)
-  }
-  
-  channel_daily_stats_df_for_plot <-function(channel, date){
-    duration <- stats_start_end_time(date)
-    query <- paste("SELECT * from daily_analysis where channel='", channel,"' and created_at >= '",duration[1],"' and created_at <= '",duration[2],"';",sep="")
-    res <- dbSendQuery(con, query)
-    channel_daily_stats_df_for_plot <- fetch(res,n=-1)
-    return(channel_daily_stats_df_for_plot)
-  }
   
   data_df_r <- reactive({
     data_df <- channel_data_df(input$date,input$channel)
     updateSelectInput(session, "stories_input", label = NULL, choices =c("All",as.character(unique(data_df$story))), selected = "All")  # input$date and others are Date objects. When outputting
-    updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$last_node)), selected = NULL)  # input$date and others are Date objects. When outputting
+    updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$last_nodes)), selected = NULL)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "stop_logic", label = NULL, choices =as.character(unique(data_df$stop_logic_data)), selected = NULL)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "message_type", label = NULL, choices =as.character(unique(data_df$message_type_text)), selected = NULL)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "message_by", label = NULL, choices =as.character(unique(data_df$message_by)), selected = "User")  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "include", label = NULL, choices = names(data_df), selected = default_columns)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "break_message_word_cloud", label = NULL, choices =as.character(unique(data_df$stop_logic_data)), selected =break_messages_type )  # input$date and others are Date objects. When outputting
-    updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df$last_node)), selected = NULL)  # input$date and others are Date objects. When outputting
+    updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df$last_nodes)), selected = NULL)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "stop_logic_story", label = NULL, choices =c("All",(as.character(unique(data_df$story)))), selected = "All")  # input$date and others are Date objects. When outputting
     
-    data_df[c("last_node")][is.na(data_df[c("last_node")])] <- "No Nodes"
+    data_df[c("last_nodes")][is.na(data_df[c("last_nodes")])] <- "No Nodes"
     data_df[] <- lapply(data_df, factor)
     return(data_df)
   })
@@ -77,8 +53,8 @@ shinyServer(function(input, output, session){
     stats_df <-stats_df_r()
     updateSelectInput(session, "stories", label = NULL, choices =as.character(unique(stats_df$story)), selected = stats_df$story[1])  # input$date and others are Date objects. When outputting
     stats_df_day <- group_by(stats_df,coll_id, conv_no)
-    stats_df_day <- summarize(stats_df_day,end_to_end_chats = min(end_to_end_chats), total_chats=1)
-    end_end_conv <- round((sum(stats_df_day$end_to_end_chats)/sum(stats_df_day$total_chats))*100,2)
+    stats_df_day <- summarize(stats_df_day,end_to_end_gogo_chat = min(end_to_end_gogo_chat), total_chats=1)
+    end_end_conv <- round((sum(stats_df_day$end_to_end_gogo_chat)/sum(stats_df_day$total_chats))*100,2)
     return(end_end_conv)
   })
   
@@ -86,8 +62,8 @@ shinyServer(function(input, output, session){
   atleast_one_conv <-reactive({ 
     stats_df <-stats_df_r()
     stats_df_day <- group_by(stats_df,coll_id, conv_no)
-    stats_df_day <- summarize(stats_df_day,total_chats_atleast_one_response = max(total_chats_atleast_one_response), total_chats=1)
-    atleast_one_conv <- round((sum(stats_df_day$total_chats_atleast_one_response)/sum(stats_df_day$total_chats))*100,2)
+    stats_df_day <- summarize(stats_df_day,atleast_one_gogo_response = max(atleast_one_gogo_response), total_chats=1)
+    atleast_one_conv <- round((sum(stats_df_day$atleast_one_gogo_response)/sum(stats_df_day$total_chats))*100,2)
     return(atleast_one_conv)
   })
   ##########################################################################################################
@@ -117,8 +93,8 @@ shinyServer(function(input, output, session){
   break_conversations <- function(data_df){
     stats_df <- stats_df_r()
     stats_df_day <- group_by(stats_df,coll_id, conv_no)
-    stats_df_day <- summarize(stats_df_day,end_to_end_chats = min(end_to_end_chats),total_chats = 1)
-    break_df <- stats_df_day[stats_df_day$end_to_end_chats==0,]
+    stats_df_day <- summarize(stats_df_day,end_to_end_gogo_chat = min(end_to_end_gogo_chat),total_chats = 1)
+    break_df <- stats_df_day[stats_df_day$end_to_end_gogo_chat==0,]
     break_df$coll_conv <-paste(break_df$coll_id,"_",break_df$conv_no) 
     data_df$coll_conv <-paste(data_df$coll_id,"_",data_df$conv_no) 
     data_df <- data_df[data_df$coll_conv %in% break_df$coll_conv, ]
@@ -141,13 +117,13 @@ shinyServer(function(input, output, session){
     stats_df_sub_story <-stats_df_r()
     story_count2 <- stats_df_sub_story
     story_count2 <- group_by(story_count2, coll_id, conv_no, story, node)
-    story_count2 <- summarize(story_count2,total_chats = 1,end_to_end_chats = min(end_to_end_chats))
+    story_count2 <- summarize(story_count2,total_chats = 1,end_to_end_gogo_chat = min(end_to_end_gogo_chat))
     
     story_count2 <- group_by(story_count2, story, node)
-    story_count2 <- summarize(story_count2,total_chats = sum(total_chats),end_to_end_chats = sum(end_to_end_chats))
+    story_count2 <- summarize(story_count2,total_chats = sum(total_chats),end_to_end_gogo_chat = sum(end_to_end_gogo_chat))
     
-    story_count2$end_to_end_chats <- round((story_count2$end_to_end_chats/story_count2$total_chats)*100,2)
-    story_count2 <- data.frame(story=story_count2$story,node=story_count2$node,conversation=story_count2$total_chats,gogo_automation=story_count2$end_to_end_chats)
+    story_count2$end_to_end_chats <- round((story_count2$end_to_end_gogo_chat/story_count2$total_chats)*100,2)
+    story_count2 <- data.frame(story=story_count2$story,node=story_count2$node,conversation=story_count2$total_chats,gogo_automation=story_count2$end_to_end_gogo_chat)
     columns <- c("story","Node","Total Conversations","%Gogo Automate")
     story_count2 <- plyr::rename(story_count2, c("node"="Node","conversation"="Total Conversations","gogo_automation"="%Gogo Automate"))
     story_count2 <- story_count2[,columns] 
@@ -186,16 +162,16 @@ shinyServer(function(input, output, session){
   node<- reactive({
     data_df <- data_df_r()
     if(input$stories_input=="All"){
-      updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$last_node)), selected = "All")  # input$date and others are Date objects. When outputting
+      updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df$last_nodes)), selected = "All")  # input$date and others are Date objects. When outputting
     }
     else{
       updateSelectInput(session, "node", label = NULL, choices =as.character(unique(data_df[data_df$story==input$stories_input,]$last_node)), selected =NULL)  # input$date and others are Date objects. When outputting
     }})
   
-  stop_logic_node<- reactive({
+  stop_logic_node <- reactive({
     data_df <- data_df_r()
     if(input$stop_logic_story=="All"){
-      updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df$last_node)), selected =NULL )  # input$date and others are Date objects. When outputting
+      updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df$last_nodes)), selected =NULL )  # input$date and others are Date objects. When outputting
     }
     else{
       updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df[data_df$story==input$stop_logic_story,]$last_node)), selected =as.character(unique(data_df[data_df$story==input$stop_logic_story,]$last_node)))  # input$date and others are Date objects. When outputting
@@ -214,14 +190,14 @@ shinyServer(function(input, output, session){
       df1 <- data_show_df[data_show_df$story==input$stories_input,]
     }
     if(!is.null(input$node)){
-      df2 <- df1[df1$last_node %in% input$node,]
+      df2 <- df1[df1$last_nodes %in% input$node,]
     }
     else{
       df2 <- df1
     }
     
     if(input$new_conversation){
-      df3 <- df2[df2$new_conv=="True",]
+      df3 <- df2[df2$new_conversation==TRUE,]
     }
     else{
       df3 <- df2
@@ -252,16 +228,20 @@ shinyServer(function(input, output, session){
     else{
       df7 <- df6
     }
-    
-    #columns <- c("chat_links","coll_id","conv_no","body","message_by","message_type_text","new_conv","last_node","detection_method","stop_logic_data",
-    #             "story")
     columns <- input$include
-    #columns <- c(columns, "prev_message", "second_prev_message", "next_message", "second_next_message")
     df7 <- df7[,columns]
     df7 <- viewCache(df7)
     return(df7)
   }
   
+  output$table2 =  DT::renderDataTable(
+    dataoutput(),class = 'cell-border stripe',rownames = FALSE,
+    filter = 'top',
+    options = list(
+      autoWidth = TRUE,
+      lengthChange = FALSE,
+      columnDefs = list(list(width = '200px', targets = 1)),scrollX = TRUE
+    ), escape = FALSE)
   
   output$table3 =  renderTable(
     datos(),digits = 0,include.rownames=FALSE
@@ -279,7 +259,7 @@ shinyServer(function(input, output, session){
   
   observeEvent(input$select_button, {
     showModal(modalDialog(
-      paste("Redis Cache",SelectedRow(),sep="-->"),
+      SelectedRow(),
       easyClose = TRUE
     ))
     
@@ -295,29 +275,26 @@ shinyServer(function(input, output, session){
   output$chart <- renderChart({
     stats_df_plot <-stats_df_plot()
     if(input$date %in% c('Last 1 Hour','Last 2 Hour','Last 4 Hour','Last 12 Hour')){
-      stats_df_plot$created_at <- as.POSIXlt(stats_df_plot$created_at, format="%Y-%m-%d %H")
+      stats_df_plot$created_at <- as.POSIXlt(stats_df_plot$created_at, format="%Y-%m-%d %H:%M:%S")
       stats_df_plot$hour <- stats_df_plot$created_at$hour
-      #stats_df_plot <- change_to_am_pm(stats_df_plot)
       stats_df_plot$date <- stats_df_plot$hour
-      #stats_df_plot$date <- format(strptime(stats_df_plot$created_at, format='%Y-%m-%d %H:%M:%S'), '%I %p')
-      
     }
     else{
       stats_df_plot$date <- as.Date(stats_df_plot$created_at)
     }
-    daily_stats <- stats_df_plot[c("date","coll_id","conv_no","total_chats","end_to_end_chats","users_count","total_chats_atleast_one_response")]
+    daily_stats <- stats_df_plot[c("date","coll_id","conv_no","end_to_end_gogo_chat","atleast_one_gogo_response")]
     
     daily_stats <- group_by(daily_stats,date , coll_id, conv_no)
-    daily_stats <- summarize(daily_stats,users_count = max(users_count, na.rm = T), end_to_end_chats = min(end_to_end_chats),
-                             total_chats_atleast_one_response = max(total_chats_atleast_one_response),
+    daily_stats <- summarize(daily_stats,users_count = n_distinct(coll_id), end_to_end_gogo_chat = min(end_to_end_gogo_chat),
+                             atleast_one_gogo_response = max(atleast_one_gogo_response),
                              total_chats=1)
     
     daily_stats <- group_by(daily_stats, date)
     daily_stats <- summarize(daily_stats, users_count = sum(users_count, na.rm = T), total_chats = sum (total_chats, na.rm = T),
-                             total_chats_atleast_one_response = sum(total_chats_atleast_one_response, na.rm=T),
-                             end_to_end_chats = round((sum(end_to_end_chats)/sum(total_chats))*100,2))
+                             atleast_one_gogo_response = sum(atleast_one_gogo_response, na.rm=T),
+                             end_to_end_gogo_chat = round((sum(end_to_end_gogo_chat)/sum(total_chats))*100,2))
     
-    plot <- data.frame(date=daily_stats$date,conversation=daily_stats$total_chats,users=daily_stats$users_count,gogo_automation=daily_stats$end_to_end_chats, atlest_one_response=daily_stats$total_chats_atleast_one_response )
+    plot <- data.frame(date=daily_stats$date,conversation=daily_stats$total_chats,users=daily_stats$users_count,gogo_automation=daily_stats$end_to_end_gogo_chat, atlest_one_response=daily_stats$atleast_one_gogo_response )
     plot$users <- as.integer(plot$users)
   
     
@@ -351,14 +328,14 @@ shinyServer(function(input, output, session){
     #stats_df_day <- stats_df[stats_df$date==as.character(input$date),]
     story_count <- stats_df
     story_count <- group_by(story_count,coll_id,conv_no, story)
-    story_count <- summarize(story_count,total_chats = 1,end_to_end_chats = min(end_to_end_chats))
+    story_count <- summarize(story_count,total_chats = 1,end_to_end_gogo_chat = min(end_to_end_gogo_chat))
     
     story_count <- group_by(story_count, story)
-    story_count <- summarize(story_count,total_chats = sum(total_chats),end_to_end_chats = sum(end_to_end_chats))
+    story_count <- summarize(story_count,total_chats = sum(total_chats),end_to_end_gogo_chat = sum(end_to_end_gogo_chat))
     
     
-    story_count$end_to_end_chats <- round((story_count$end_to_end_chats/story_count$total_chats)*100,2)
-    story_count <- data.frame(story=story_count$story,conversation=story_count$total_chats,gogo_automation=story_count$end_to_end_chats)
+    story_count$end_to_end_chats <- round((story_count$end_to_end_gogo_chat/story_count$total_chats)*100,2)
+    story_count <- data.frame(story=story_count$story,conversation=story_count$total_chats,gogo_automation=story_count$end_to_end_gogo_chat)
     columns <- c("story","Total Conversations","%Gogo Automate")
     story_count <- plyr::rename(story_count, c("conversation"="Total Conversations","gogo_automation"="%Gogo Automate"))
     story_count <- story_count[,columns] 
@@ -374,7 +351,7 @@ shinyServer(function(input, output, session){
     data_df <- data_df_r()
     df1 <- data_df[data_df$message_by=="User",]
     if(!is.null(node)) {
-      df2 <- df1[df1$last_node %in% node,]
+      df2 <- df1[df1$last_nodes %in% node,]
     }
     else{
       df2<-df1
@@ -432,10 +409,10 @@ shinyServer(function(input, output, session){
     }
     else{
       b<-dcast(data_df,last_node+stop_logic_data~"")
-      b<-b[b$last_node %in% input$node_word_cloud,]
+      b<-b[b$last_nodes %in% input$node_word_cloud,]
       mdata<-b[b$stop_logic_data %in% input$break_message_word_cloud,]
       mdata <-dcast(mdata, last_node~stop_logic_data)
-      mdata<- plyr::rename(mdata, c("last_node"="story"))
+      mdata<- plyr::rename(mdata, c("last_nodes"="story"))
     }
     return(mdata)
     })

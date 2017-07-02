@@ -12,7 +12,7 @@ dashboardPage(skin = "black",
                   #          format = "yyyy-mm-dd", startview = "month", weekstart = 0,
                   #          language = "en", width = NULL)
                 ),
-                selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = NULL),
+                selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = c("flightschannel","reminderschannel")),
                 img(src='./tejalogo.png',height=220,width=220,style="margin-top:180px;margin-left:5px;opacity:0.2;")
               ),
               dashboardBody(
@@ -22,7 +22,7 @@ dashboardPage(skin = "black",
                 ),
                 
                 
-                tags$head(  tags$script(src = "https://code.highcharts.com/modules/funnel.js"),
+                tags$head(  
                             tags$head(tags$style(HTML("input[type='search']:disabled {visibility:hidden}"))),
                             tags$style(HTML('
                                             

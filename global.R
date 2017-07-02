@@ -18,7 +18,7 @@ source("config.R")
 
 ############ Needed to add View Buttons to table###########################
 viewCache <- function(df){
-  df$redis_cache <- paste0("<button id='button_",df$msg_id,"' type='button' class='btn btn-default action-button' onclick='Shiny.onInputChange(&quot;select_button&quot;,  this.id)'>View Cache</button>")
+  df$redis_cache <- paste0("<button id='button_",df$message_id,"' type='button' class='btn btn-default action-button' onclick='Shiny.onInputChange(&quot;select_button&quot;,  this.id)'>View Cache</button>")
   return(df)
 }
 ###########################################################################

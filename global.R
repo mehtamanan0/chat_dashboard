@@ -104,13 +104,13 @@ start_end_time<-function(date){
   }
   else if(date=="Yesterday"){
     curr_day =  as.Date(curr_time)
-    start_time = curr_day -1
-    end_time <- curr_day
+    start_time = strftime(curr_day -1,"%Y-%m-%dT%H:%MZ")
+    end_time <- strftime(curr_day,"%Y-%m-%dT%H:%MZ")
   }
   else if(date=="Last Week"){
     curr_day =  as.Date(curr_time)
-    start_time = curr_day -8
-    end_time <- curr_day
+    start_time = strftime(curr_day -8,"%Y-%m-%dT%H:%MZ")
+    end_time <- strftime(curr_day,"%Y-%m-%dT%H:%MZ")
   }
   return(c(start_time, end_time))
 }
@@ -126,8 +126,8 @@ stats_start_end_time <- function(date){
   }
   else {
     curr_day =  as.Date(curr_time)
-    start_time = curr_day - 8
-    end_time <- curr_day
+    start_time = strftime(curr_day -8,"%Y-%m-%dT%H:%MZ")
+    end_time <- strftime(curr_day,"%Y-%m-%dT%H:%MZ")
   }
   return(c(start_time, end_time))
 }

@@ -5,14 +5,11 @@ dashboardPage(skin = "black",
               dbHeader,
               dashboardSidebar(
                 sidebarMenu(
-                  menuItem("Haptik", tabName = "haptik", icon = icon("cloud")),
-                  selectInput('date', 'What Happens in', multiple=FALSE, selectize=TRUE,choices = date_filters)
-                  
-                  #dateInput('date', 'Select date for analysis', value = as.character(Sys.Date()-5) , min = NULL, max = NULL,
-                  #          format = "yyyy-mm-dd", startview = "month", weekstart = 0,
-                  #          language = "en", width = NULL)
+                  menuItem("Channel Bot-Stats", tabName = "haptik", icon = icon("cloud")),
+                  menuItem("Break Messages", tabName = "break", icon = icon("cloud")),
+                  selectInput('date', 'What Happens in', multiple=FALSE, selectize=TRUE,choices = date_filters),
+                  selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = c("flightschannel","reminderschannel"))
                 ),
-                selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = c("flightschannel","reminderschannel")),
                 img(src='./tejalogo.png',height=220,width=220,style="margin-top:180px;margin-left:5px;opacity:0.2;")
               ),
               dashboardBody(
@@ -115,16 +112,6 @@ dashboardPage(skin = "black",
                           ),
                           
                           fluidRow(
-                            #tabBox(
-                            #  title = "Story and Node Level Analyis",
-                            #  width="12",
-                            #  # The id lets us use input$tabset1 on the server to find the current tab
-                            #  id = "tabset1",
-                            #  tabPanel("Stories Chat Analysis"  , tableOutput("table1")),
-                            #  tabPanel("Node Chat Analysis",
-                            #           selectInput('stories', 'Select Stories', multiple=FALSE, selectize=TRUE,choices = NULL,selected = NULL),
-                            #           tableOutput("table3"))
-                            #),
                             box(
                               title = "Stories Wise Chat Analysis", status = "primary", solidHeader = TRUE,
                               tableOutput("table1")
@@ -134,7 +121,11 @@ dashboardPage(skin = "black",
                               title = "Sub Story Wise Chat Analysis", status = "primary", solidHeader = TRUE,
                               selectInput('stories', 'Select Stories', multiple=FALSE, selectize=TRUE,choices = NULL,selected = NULL),
                               tableOutput("table3")
-                            ),
+                            )
+                            
+                          )),
+                  tabItem(tabName = "break",
+                          fluidRow(
                             box(
                               div(align = "left",downloadButton('downloadData', 'Download CSV',style = "background-color:#a9cce3")),
                               width="9",dataTableOutput("table2"),status = "primary", solidHeader = TRUE),
@@ -150,11 +141,6 @@ dashboardPage(skin = "black",
                                 checkboxInput('new_conversation', 'New Convesation only', value = FALSE, width = NULL),
                                 checkboxInput('break_message', 'Select Break Message Only', value = FALSE, width = NULL)
                             )
-                            #box(
-                            #  title = "Top Questions",width = "9",
-                            #  DT::dataTableOutput("question_table"),status = "primary", solidHeader = TRUE)
-                            #dataTableOutput("table2"),
-                            
                             
                             
                             
@@ -177,6 +163,7 @@ dashboardPage(skin = "black",
                                 selectInput('break_message_word_cloud', 'Select Break Logic', selectize=TRUE,choices = NULL,multiple=TRUE))
                             
                           )
+                          
                   )
                   
                   # Boxes need to be put in a row (or column)

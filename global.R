@@ -8,12 +8,9 @@ require('rCharts')
 library('dplyr')
 library(shinyjs)
 library(jsonlite)
-library(elastic)
 library(DT)
+library(httr)
 
-
-source("elastic_data.R")
-source("config.R")
 
 
 ############ Needed to add View Buttons to table###########################
@@ -24,7 +21,7 @@ viewCache <- function(df){
 ###########################################################################
 
 # Elastic Connection
-connect(es_host = ELASTIC_AWS_HOST, es_path = "", es_port = ELASTIC_PORT, es_transport_schema  = "https")
+# connect(es_host = ELASTIC_AWS_HOST, es_path = "", es_port = ELASTIC_PORT, es_transport_schema  = "https")
 
 date_convertion_to_IST <- function(date_string){
   date_string <- strftime(strptime(date_string, format="%Y-%m-%dT%H:%MZ"),"%Y-%m-%d %H:%M:%S")
@@ -34,35 +31,24 @@ date_convertion_to_IST <- function(date_string){
   return(ist_date_string)
 }
 
-
-# read channel df
-channel_data_df <-function(date,channel){
-  duration <- start_end_time(date)
-  query <- message_query_generator(channel, duration[1], duration[2])
-  channel_data_df <- elastic_get_data(MESSAGE_KINESIS_INDEX, MESSAGE_KINESIS_TYPE, query, 1000)
-  channel_data_df$created_at <- date_convertion_to_IST(channel_data_df$created_at)
-  channel_data_df <- plyr::rename(channel_data_df, c("business_via_name"="channel"))
-  return(channel_data_df)
+fetch_elastic_stats <- function(date,channel){
+  data = list(
+    channel=channel,
+    date_text=date 
+  )
+  res <- POST("http://aman.hellohaptik.com/mogambo_api/analytics/fetch_stats", body = data, encode = "form", verbose())
+  data <- fromJSON(content(res, "text", encoding='UTF-8'))
+  return(data)
 }
 
-channel_daily_stats_df <-function(channel, date){
-  duration <- start_end_time(date)
-  query <- stats_query_generator(channel, duration[1], duration[2])
-  channel_daily_stats_df <- elastic_get_data(STATS_KINESIS_INDEX, STATS_KINESIS_TYPE, query, 1000)
-  channel_daily_stats_df$created_at <- date_convertion_to_IST(channel_daily_stats_df$created_at)
-  channel_daily_stats_df <- plyr::rename(channel_daily_stats_df, c("business_via_name"="channel"))
-  channel_daily_stats_df <- plyr::rename(channel_daily_stats_df, c("conversation_no"="conv_no"))
-  return(channel_daily_stats_df)
-}
-
-channel_daily_stats_df_for_plot <-function(channel, date){
-  duration <- stats_start_end_time(date)
-  query <- stats_query_generator(channel, duration[1], duration[2])
-  channel_daily_stats_df_for_plot <- elastic_get_data(STATS_KINESIS_INDEX, STATS_KINESIS_TYPE, query, 1000)
-  channel_daily_stats_df_for_plot$created_at <- date_convertion_to_IST(channel_daily_stats_df_for_plot$created_at)
-  channel_daily_stats_df_for_plot <- plyr::rename(channel_daily_stats_df_for_plot, c("business_via_name"="channel"))
-  channel_daily_stats_df_for_plot <- plyr::rename(channel_daily_stats_df_for_plot, c("conversation_no"="conv_no"))
-  return(channel_daily_stats_df_for_plot)
+fetch_elastic_message <- function(date,channel){
+  data = list(
+    channel=channel,
+    date_text=date 
+  )
+  res <- POST("http://aman.hellohaptik.com/mogambo_api/analytics/fetch_messages", body = data, encode = "form", verbose())
+  data <- fromJSON(content(res, "text", encoding='UTF-8'))
+  return(data)
 }
 
 ######## wordcloud#################
@@ -81,57 +67,4 @@ break_messages_type<-c("True_no_nodes","True_trash_detected","True_nothing_chang
 default_columns <- c("chat_link", "body", "story", "last_nodes", "predicted_domain", "stop_logic_data","message_id")
 
 ## Date filter
-date_filters <- c("Last 12 Hour", "Last 2 Hour", "Last 4 Hour", "Last 1 Hour", "Yesterday", "Last Week")
-
-start_end_time<-function(date){
-  hour = 3600
-  
-  if(date=="Last 1 Hour"){
-    end_time = strftime((as.POSIXlt(Sys.time(), "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
-    start_time = strftime((as.POSIXlt(Sys.time()-hour*1, "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
-  }
-  else if(date=="Last 2 Hour"){
-    end_time = strftime((as.POSIXlt(Sys.time(), "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
-    start_time = strftime((as.POSIXlt(Sys.time()-hour*2, "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
-  }
-  else if(date=="Last 4 Hour"){
-    end_time = strftime((as.POSIXlt(Sys.time(), "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
-    start_time = strftime((as.POSIXlt(Sys.time()-hour*4, "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
-  }
-  else if(date=="Last 12 Hour"){
-    end_time = strftime((as.POSIXlt(Sys.time(), "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
-    start_time = strftime((as.POSIXlt(Sys.time()-hour*12, "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
-  }
-  else if(date=="Yesterday"){
-    curr_day =  as.Date(curr_time)
-    start_time = strftime(curr_day -1,"%Y-%m-%dT%H:%MZ")
-    end_time <- strftime(curr_day,"%Y-%m-%dT%H:%MZ")
-  }
-  else if(date=="Last Week"){
-    curr_day =  as.Date(curr_time)
-    start_time = strftime(curr_day -8,"%Y-%m-%dT%H:%MZ")
-    end_time <- strftime(curr_day,"%Y-%m-%dT%H:%MZ")
-  }
-  return(c(start_time, end_time))
-}
-
-stats_start_end_time <- function(date){
-  hour = 3600
-  curr_time <- as.POSIXlt(Sys.time())
-  curr_time$min <- 0
-  curr_time$sec <- 0 
-  if(date %in% c('Last 1 Hour','Last 2 Hour','Last 4 Hour','Last 12 Hour')){
-    end_time = strftime((as.POSIXlt(Sys.time(), "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
-    start_time = strftime((as.POSIXlt(Sys.time()-hour*12, "UTC", "%Y-%m-%dT%H:%M:%S")), "%Y-%m-%dT%H:%MZ")
-  }
-  else {
-    curr_day =  as.Date(curr_time)
-    start_time = strftime(curr_day -8,"%Y-%m-%dT%H:%MZ")
-    end_time <- strftime(curr_day,"%Y-%m-%dT%H:%MZ")
-  }
-  return(c(start_time, end_time))
-}
-
-
-
-
+date_filters <- c("Last Week", "Last 2 Hour", "Last 4 Hour", "Last 1 Hour", "Yesterday", "Last 12 Hour")

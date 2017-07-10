@@ -20,7 +20,6 @@ viewCache <- function(df){
 }
 ###########################################################################
 
-ELASTIC_HOST = "http://aman.hellohaptik.com/"
 
 date_convertion_to_IST <- function(date_string){
   date_string <- strftime(strptime(date_string, format="%Y-%m-%dT%H:%MZ"),"%Y-%m-%d %H:%M:%S")
@@ -35,7 +34,7 @@ fetch_elastic_stats <- function(date,channel){
     channel=channel,
     date_text=date 
   )
-  res <- POST("http://aman.hellohaptik.com/mogambo_api/analytics/fetch_stats", body = data, encode = "form", verbose())
+  res <- POST("http://ip-172-31-44-20.ap-south-1.compute.internal/mogambo_api/analytics/fetch_stats", body = data, encode = "form", verbose())
   data <- fromJSON(content(res, "text", encoding='UTF-8'))
   return(data)
 }
@@ -45,7 +44,7 @@ fetch_elastic_message <- function(date,channel){
     channel=channel,
     date_text=date 
   )
-  res <- POST("http://aman.hellohaptik.com/mogambo_api/analytics/fetch_messages", body = data, encode = "form", verbose())
+  res <- POST("http://ip-172-31-44-20.ap-south-1.compute.internal/mogambo_api/analytics/fetch_messages", body = data, encode = "form", verbose())
   data <- fromJSON(content(res, "text", encoding='UTF-8'))
   return(data)
 }

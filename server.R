@@ -30,10 +30,7 @@ shinyServer(function(input, output, session){
     updateSelectInput(session, "include", label = NULL, choices = names(data_df), selected = default_columns)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "break_message_word_cloud", label = NULL, choices =as.character(unique(data_df$stop_logic_data)), selected =break_messages_type )  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df$last_nodes)), selected = NULL)  # input$date and others are Date objects. When outputting
-    updateSelectInput(session, "stop_logic_story", label = NULL, choices =c("All",(as.character(unique(data_df$story)))), selected = "All")  # input$date and others are Date objects. When outputting
-    #data_df$story <- as.factor(data_df$story)
-    #data_df$last_node <- as.factor(data_df$last_node)
-    #data_df$predicted_domain <- as.factor(data_df$predicted_domain)
+    updateSelectInput(session, "stop_logic_story", label = NULL, choices =c("All",(as.character(unique(data_df$story)))), selected = "All")  # input$date and others are Date objects. When outputtin
     data_df[is.na(data_df)] <- "None"
     return(data_df)
   })

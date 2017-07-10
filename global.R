@@ -20,8 +20,7 @@ viewCache <- function(df){
 }
 ###########################################################################
 
-# Elastic Connection
-# connect(es_host = ELASTIC_AWS_HOST, es_path = "", es_port = ELASTIC_PORT, es_transport_schema  = "https")
+ELASTIC_HOST = "http://aman.hellohaptik.com/"
 
 date_convertion_to_IST <- function(date_string){
   date_string <- strftime(strptime(date_string, format="%Y-%m-%dT%H:%MZ"),"%Y-%m-%d %H:%M:%S")
@@ -66,5 +65,10 @@ break_messages_type<-c("True_no_nodes","True_trash_detected","True_nothing_chang
 #### Default columns to select##
 default_columns <- c("chat_link", "body", "story", "last_nodes", "predicted_domain", "stop_logic_data","message_id")
 
+
 ## Date filter
-date_filters <- c("Last Week", "Last 2 Hour", "Last 4 Hour", "Last 1 Hour", "Yesterday", "Last 12 Hour")
+date_filters <- c( "Last 1 Hour", "Last 2 Hour", "Last 4 Hour", "Last 12 Hour", "Yesterday", "Last Week")
+
+
+
+channels_list <- c("flightschannel","reminderschannel","aroundmechannel","trainschannel","cabschannel","rechargechannel")

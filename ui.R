@@ -8,7 +8,7 @@ dashboardPage(skin = "black",
                   menuItem("Channel Bot-Stats", tabName = "haptik", icon = icon("signal")),
                   menuItem("Break Messages", tabName = "break", icon = icon("list-alt")),
                   selectInput('date', 'What Happens in', multiple=FALSE, selectize=TRUE,choices = date_filters),
-                  selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = c("flightschannel","reminderschannel"))
+                  selectInput('channel', 'Select Channel', multiple=FALSE, selectize=TRUE,choices = channels_list)
                 ),
                 img(src='./tejalogo.png',height=220,width=220,style="margin-top:180px;margin-left:5px;opacity:0.2;")
               ),

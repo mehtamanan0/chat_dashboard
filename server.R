@@ -239,6 +239,8 @@ shinyServer(function(input, output, session){
     else{
       df7 <- df6
     }
+    df7$last_nodes <- as.character(df7$last_nodes)
+    df7$message_id <- as.character(df7$message_id)
     columns <- input$include
     df7 <- df7[,columns]
     df7 <- viewCache(df7)

@@ -128,7 +128,7 @@ dashboardPage(skin = "black",
                           fluidRow(
                             box(
                               div(align = "left",downloadButton('downloadData', 'Download CSV',style = "background-color:#a9cce3")),
-                              width="9",dataTableOutput("table2"),status = "primary", solidHeader = TRUE),
+                              width="9",dataTableOutput("table2"),status = "primary", solidHeader = TRUE, uiOutput("popup")),
                             #dataTableOutput("table2"),
                             
                             box(title="Filters",width="3", solidHeader = TRUE,status = "warning",height = "816",

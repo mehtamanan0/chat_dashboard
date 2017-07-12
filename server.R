@@ -3,6 +3,9 @@ shinyServer(function(input, output, session){
   get_redis_cache <- function(msg_id){
     data_df <- data_df_r()
     cache_data <- data_df[data_df$message_id==msg_id,]$message_cache[1]
+    cache_data <- gsub("\n",'<br>',cache_data)
+    cache_data <- paste0("<pre>",cache_data,"</pre>")
+    print(typeof(cache_data))
     if(is.null(cache_data)){
       cache_data = 'No Cache Found'
     }
@@ -244,11 +247,11 @@ shinyServer(function(input, output, session){
   
   output$table2 =  renderDataTable(
     dataoutput(),class = 'cell-border stripe',rownames = FALSE,
-    filter = 'top',
+    selection = list(mode = 'single'),
     options = list(
       autoWidth = TRUE,
       lengthChange = FALSE,
-      columnDefs = list(list(width = '200px', targets = 1)),scrollX = TRUE
+      columnDefs = list(list(width = '200px',targets = 1)),scrollX = TRUE
     ), escape = FALSE)
   
   output$table3 =  renderTable(
@@ -265,17 +268,20 @@ shinyServer(function(input, output, session){
   
   
   observeEvent(input$select_button, {
-    showModal(modalDialog(
-      SelectedRow(),
-      easyClose = TRUE
-    ))
-    
+    toggleModal(session, "modalExample", "open")
+  })
+  
+  output$popup <- renderUI({
+    bsModal("modalExample", "Message Cache", "BUTnew", size = "large",
+            HTML(SelectedRow())
+    )
   })
   
   output$downloadData <- downloadHandler(
-    filename = function() { paste('dataset', '.csv', sep='') },
+    filename = function() { paste('dataset.csv', sep='') },
     content = function(file) {
-      write.csv(dataoutput(), file)
+      p1 <- dataoutput()
+      p1$save(file, standalone = TRUE)
     })
   
   
@@ -289,6 +295,8 @@ shinyServer(function(input, output, session){
       stats_df_plot$date <- stats_df_plot$hour
     }
     else{
+      stats_df_plot$created_at<- date_convertion_to_IST(stats_df_plot$created_at)
+      stats_df_plot$created_at <- as.POSIXlt(stats_df_plot$created_at, format="%Y-%m-%d %H:%M:%S")
       stats_df_plot$date <- as.Date(stats_df_plot$created_at)
     }
     daily_stats <- stats_df_plot[c("date","coll_id","conversation_no","end_to_end_gogo_chat","atleast_one_gogo_response")]
@@ -418,10 +426,10 @@ shinyServer(function(input, output, session){
       mdata <-dcast(mdata, story~stop_logic_data)
     }
     else{
-      b<-dcast(data_df,last_node+stop_logic_data~"")
+      b<-dcast(data_df,last_nodes+stop_logic_data~"")
       b<-b[b$last_nodes %in% input$node_word_cloud,]
       mdata<-b[b$stop_logic_data %in% input$break_message_word_cloud,]
-      mdata <-dcast(mdata, last_node~stop_logic_data)
+      mdata <-dcast(mdata, last_nodes~stop_logic_data)
       mdata<- plyr::rename(mdata, c("last_nodes"="story"))
     }
     return(mdata)

@@ -10,6 +10,7 @@ library(shinyjs)
 library(jsonlite)
 library(DT)
 library(httr)
+library(shinyBS)
 
 
 

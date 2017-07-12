@@ -239,11 +239,11 @@ shinyServer(function(input, output, session){
     else{
       df7 <- df6
     }
-    df7$last_nodes <- as.character(df7$last_nodes)
-    df7$message_id <- as.character(df7$message_id)
     columns <- input$include
     df7 <- df7[,columns]
     df7 <- viewCache(df7)
+    df7$last_nodes <- as.character(df7$last_nodes)
+    df7$message_id <- as.character(df7$message_id)
     return(df7)
   }
   
@@ -280,12 +280,10 @@ shinyServer(function(input, output, session){
   })
   
   output$downloadData <- downloadHandler(
-    filename = function() { paste('dataset.csv', sep='') },
+    filename = function() { paste('dataset', '.csv', sep='') },
     content = function(file) {
-      p1 <- dataoutput()
-      p1$save(file, standalone = TRUE)
+      write.csv(dataoutput(), file)
     })
-  
   
   output$chart <- renderChart({
     all_stats <- all_stats_r()

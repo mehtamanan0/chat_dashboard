@@ -3,10 +3,18 @@ shinyServer(function(input, output, session){
   get_redis_cache <- function(msg_id){
     data_df <- data_df_r()
     cache_data <- data_df[data_df$message_id==msg_id,]$message_cache[1]
+    cache_data <- gsub("\n",'<br>',cache_data)
+    cache_data <- paste0("<pre>",cache_data,"</pre>")
+    print(typeof(cache_data))
     if(is.null(cache_data)){
       cache_data = 'No Cache Found'
     }
     return(cache_data)
+  }
+  
+  rejson<- function(text){
+    text <- gsub("False",'"False"',text)
+    return(text)
   }
   
   all_stats_r <- reactive({
@@ -268,11 +276,13 @@ shinyServer(function(input, output, session){
   
   
   observeEvent(input$select_button, {
-    showModal(modalDialog(
-      SelectedRow(),
-      easyClose = TRUE
-    ))
-    
+    toggleModal(session, "modalExample", "open")
+  })
+  
+  output$popup <- renderUI({
+    bsModal("modalExample", "Message Cache", "BUTnew", size = "large",
+            HTML(SelectedRow())
+    )
   })
   
   output$downloadData <- downloadHandler(

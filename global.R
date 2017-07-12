@@ -1,6 +1,7 @@
 library(shiny)
 library(shinydashboard)
 library(plyr)
+library(shinyBS)
 library(reshape2)
 library(reshape)
 library(wordcloud)
@@ -8,7 +9,6 @@ require('rCharts')
 library('dplyr')
 library(shinyjs)
 library(jsonlite)
-library(DT)
 library(httr)
 
 

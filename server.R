@@ -34,6 +34,8 @@ shinyServer(function(input, output, session){
     updateSelectInput(session, "break_message_word_cloud", label = NULL, choices =as.character(unique(data_df$stop_logic_data)), selected =break_messages_type )  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "node_word_cloud", label = NULL, choices =as.character(unique(data_df$last_nodes)), selected = NULL)  # input$date and others are Date objects. When outputting
     updateSelectInput(session, "stop_logic_story", label = NULL, choices =c("All",(as.character(unique(data_df$story)))), selected = "All")  # input$date and others are Date objects. When outputtin
+    data_df$last_nodes <- as.character(data_df$last_nodes)
+    data_df$message_id <- as.character(data_df$message_id)
     data_df[is.na(data_df)] <- "None"
     return(data_df)
   })
@@ -242,8 +244,6 @@ shinyServer(function(input, output, session){
     columns <- input$include
     df7 <- df7[,columns]
     df7 <- viewCache(df7)
-    df7$last_nodes <- as.character(df7$last_nodes)
-    df7$message_id <- as.character(df7$message_id)
     return(df7)
   }
   

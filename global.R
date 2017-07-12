@@ -9,6 +9,7 @@ require('rCharts')
 library('dplyr')
 library(shinyjs)
 library(jsonlite)
+library(DT)
 library(httr)
 
 

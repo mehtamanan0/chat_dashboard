@@ -15,7 +15,8 @@ dashboardPage(skin = "black",
               dashboardBody(
                 tags$style(type="text/css",
                            ".shiny-output-error { visibility: hidden; }",
-                           ".shiny-output-error:before { visibility: hidden; }"
+                           ".shiny-output-error:before { visibility: hidden; }",
+                           tags$head(tags$style(HTML("input[type='search']:disabled {visibility:hidden}")))
                 ),
                 
                 

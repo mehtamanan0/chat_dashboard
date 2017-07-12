@@ -159,11 +159,10 @@ shinyServer(function(input, output, session){
   }
   output$table2 =  DT::renderDataTable(
     dataoutput(),class = 'cell-border stripe',rownames = FALSE,
-    filter = 'top',
     options = list(
       autoWidth = TRUE,
       lengthChange = FALSE,
-      columnDefs = list(list(width = '200px', targets = 1)),scrollX = TRUE
+      columnDefs = list(list(width = '200px', targets = 1,searchable = FALSE)),scrollX = TRUE
     ), escape = FALSE)
   
   output$table3 =   renderDataTable(
@@ -255,11 +254,11 @@ shinyServer(function(input, output, session){
   
   output$table2 =  renderDataTable(
     dataoutput(),class = 'cell-border stripe',rownames = FALSE,
-    filter = 'top',
+    selection = list(mode = 'single'),
     options = list(
       autoWidth = TRUE,
       lengthChange = FALSE,
-      columnDefs = list(list(width = '200px', targets = 1)),scrollX = TRUE
+      columnDefs = list(list(width = '200px',targets = 1)),scrollX = TRUE
     ), escape = FALSE)
   
   output$table3 =  renderTable(

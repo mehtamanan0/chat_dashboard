@@ -282,6 +282,19 @@ shinyServer(function(input, output, session){
     )
     
   })
+  output$popup <- renderUI({
+    bsModal("modalExample", "Message Cache", "BUTnew", size = "large",
+            HTML(paste('<div id="test"></div> <link rel="stylesheet" href="styles.css">
+               <script type="text/javascript" src="renderjson.js"></script>
+               <script>
+               var json = ',SelectedRow(),';
+               renderjson.set_show_to_level(1);
+               document.getElementById("test").appendChild(renderjson(json));
+               </script>'))
+    )
+    
+  })
+  
   
   output$downloadData <- downloadHandler(
     filename = function() { paste('dataset', '.csv', sep='') },

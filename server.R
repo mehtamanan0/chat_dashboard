@@ -3,9 +3,6 @@ shinyServer(function(input, output, session){
   get_redis_cache <- function(msg_id){
     data_df <- data_df_r()
     cache_data <- data_df[data_df$message_id==msg_id,]$message_cache[1]
-    cache_data <- gsub("\n",'<br>',cache_data)
-    cache_data <- paste0("<pre>",cache_data,"</pre>")
-    print(typeof(cache_data))
     if(is.null(cache_data)){
       cache_data = 'No Cache Found'
     }

@@ -319,12 +319,12 @@ shinyServer(function(input, output, session){
     daily_stats <- stats_df_plot[c("date","coll_id","conversation_no","end_to_end_gogo_chat","atleast_one_gogo_response")]
     
     daily_stats <- group_by(daily_stats,date , coll_id, conversation_no)
-    daily_stats <- summarize(daily_stats,users_count = n_distinct(coll_id), end_to_end_gogo_chat = min(end_to_end_gogo_chat),
+    daily_stats <- summarize(daily_stats, end_to_end_gogo_chat = min(end_to_end_gogo_chat),
                              atleast_one_gogo_response = max(atleast_one_gogo_response),
                              total_chats=1)
     
     daily_stats <- group_by(daily_stats, date)
-    daily_stats <- summarize(daily_stats, users_count = sum(users_count, na.rm = T), total_chats = sum (total_chats, na.rm = T),
+    daily_stats <- summarize(daily_stats, users_count = n_distinct(coll_id), total_chats = sum (total_chats, na.rm = T),
                              atleast_one_gogo_response = sum(atleast_one_gogo_response, na.rm=T),
                              end_to_end_gogo_chat = round((sum(end_to_end_gogo_chat)/sum(total_chats))*100,2))
     

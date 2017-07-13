@@ -457,5 +457,8 @@ shinyServer(function(input, output, session){
     a$plotOptions(series=list(stacking="normal"))
     return(a)
   })
+  observeEvent(input$refresh, {
+    session$reload() 
+  })
 })
 

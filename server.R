@@ -3,9 +3,6 @@ shinyServer(function(input, output, session){
   get_redis_cache <- function(msg_id){
     data_df <- data_df_r()
     cache_data <- data_df[data_df$message_id==msg_id,]$message_cache[1]
-    cache_data <- gsub("\n",'<br>',cache_data)
-    cache_data <- paste0("<pre>",cache_data,"</pre>")
-    print(typeof(cache_data))
     if(is.null(cache_data)){
       cache_data = 'No Cache Found'
     }
@@ -249,6 +246,8 @@ shinyServer(function(input, output, session){
     columns <- input$include
     df7 <- df7[,columns]
     df7 <- viewCache(df7)
+    df7$last_nodes <- as.character(df7$last_nodes)
+    df7$message_id <- as.character(df7$message_id)
     return(df7)
   }
   
@@ -280,8 +279,15 @@ shinyServer(function(input, output, session){
   
   output$popup <- renderUI({
     bsModal("modalExample", "Message Cache", "BUTnew", size = "large",
-            HTML(SelectedRow())
+            HTML(paste('<div id="test"></div> <link rel="stylesheet" href="/css/styles.css">
+               <script type="text/javascript" src="/scripts/renderjson.js"></script>
+               <script>
+               var json = ',SelectedRow(),';
+               renderjson.set_show_to_level(1);
+               document.getElementById("test").appendChild(renderjson(json));
+               </script>'))
     )
+    
   })
   
   output$downloadData <- downloadHandler(

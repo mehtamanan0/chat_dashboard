@@ -101,7 +101,6 @@ shinyServer(function(input, output, session){
   break_conversations <- function(data_df){
     all_stats <- all_stats_r()
     stats_df <- all_stats$stats_data
-    stats_df <- all_stats
     stats_df_day <- group_by(stats_df,coll_id, conversation_no)
     stats_df_day <- summarize(stats_df_day,end_to_end_gogo_chat = min(end_to_end_gogo_chat),total_chats = 1)
     break_df <- stats_df_day[stats_df_day$end_to_end_gogo_chat==0,]

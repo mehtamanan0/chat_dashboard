@@ -113,7 +113,7 @@ shinyServer(function(input, output, session){
     for(i in 1:length(coll_conv)){
       break_conv_df <- data_df[data_df$coll_conv==coll_conv[i],]
       for(j in 2:nrow(break_conv_df)){
-        if(break_conv_df$message_by[j]=='Assistant'){
+        if(!(is.na(break_conv_df$message_by[j]))&(break_conv_df$message_by[j]=='Assistant')){
           break_message_ids <- c(break_message_ids,break_conv_df$message_id[j-1])
           break
         } 

@@ -98,28 +98,30 @@ shinyServer(function(input, output, session){
       icon = icon("download")
     )
   })
-  
   break_conversations <- function(data_df){
     all_stats <- all_stats_r()
     stats_df <- all_stats$stats_data
+    stats_df <- all_stats
     stats_df_day <- group_by(stats_df,coll_id, conversation_no)
     stats_df_day <- summarize(stats_df_day,end_to_end_gogo_chat = min(end_to_end_gogo_chat),total_chats = 1)
     break_df <- stats_df_day[stats_df_day$end_to_end_gogo_chat==0,]
     break_df$coll_conv <-paste(break_df$coll_id,"_",break_df$conversation_no) 
     data_df$coll_conv <-paste(data_df$coll_id,"_",data_df$conversation_no) 
     data_df <- data_df[data_df$coll_conv %in% break_df$coll_conv, ]
-    data_df$bm <- 0
-    included <- c()
-    data_df_break<-data_df[data_df$message_by %in% c('User','Assistant'),]
-    for(i in 2:nrow(data_df_break)){
-      if((data_df_break$message_by[i]=='Assistant') & (data_df_break$coll_conv[i]==data_df_break$coll_conv[i-1]) & !(data_df_break$coll_conv[i] %in% included)){
-        included <- c(included, data_df_break$coll_conv[i])
-        data_df_break$bm[i-1] <-1 
-      } 
+    data_df <- data_df[with(data_df, order(message_id)), ]
+    coll_conv <- unique(data_df$coll_conv)
+    break_message_ids = c()
+    for(i in 1:length(coll_conv)){
+      break_conv_df <- data_df[data_df$coll_conv==coll_conv[i],]
+      for(i in 2:nrow(break_conv_df)){
+        if(break_conv_df$message_by[i]=='Assistant'){
+          break_message_ids <- c(break_message_ids,break_conv_df$message_id[i-1])
+          break
+        } 
+      }
     }
-    data_df_break <- data_df_break[data_df_break$bm==1,]
-    #data_df <- data_df[data_df$msg_id %in% data_df_break$msg_id,]
-    return(data_df_break)
+    data_df <- data_df[data_df$message_id %in% break_message_ids,]
+    return(data_df)
   }
   
   datos<- function(){
@@ -463,6 +465,9 @@ shinyServer(function(input, output, session){
     a$addParams(dom = "pie_plot")
     a$plotOptions(series=list(stacking="normal"))
     return(a)
+  })
+  observeEvent(input$refresh, {
+    session$reload() 
   })
 })
 

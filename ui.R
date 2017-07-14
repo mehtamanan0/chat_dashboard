@@ -1,6 +1,9 @@
 dbHeader <- dashboardHeader(title= "Teja: Gogo Ki Report", tags$li(class = "dropdown",
                                                                    tags$a(href="http://haptik.ai", target="_blank", 
-                                                                          tags$img(height = "20px", alt="", src="./logo.png"))))
+                                                                          tags$img(height = "20px", alt="", src="./logo.png"))), tags$li(class = "dropdown",tags$head(
+                                                                            tags$style(HTML(".btn {background-color: #FFF;border: none;color: #00C0EF;font-weight: bold;padding: 15px 32px;text-align: center;
+                                                                            text-decoration: none;display: inline-block;font-size: 16px;"))),actionButton("refresh", "Refresh")))
+
 dashboardPage(skin = "black",
               dbHeader,
               dashboardSidebar(

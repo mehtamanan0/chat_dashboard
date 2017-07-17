@@ -23,24 +23,37 @@ viewCache <- function(df){
 
 
 fetch_elastic_stats <- function(date,channel){
-  data = list(
-    channel=channel,
-    date_text=date 
-  )
-  res <- POST("http://ip-172-31-44-20.ap-south-1.compute.internal/mogambo_api/analytics/fetch_stats", body = data, encode = "form", verbose())
-  data <- fromJSON(content(res, "text", encoding='UTF-8'))
-  return(data)
+  if(!(is.na(channel)) & (channel!=""))
+  {
+    data = list(
+      channel=channel,
+      date_text=date 
+    )
+    res <- POST("http://ip-172-31-44-20.ap-south-1.compute.internal/mogambo_api/analytics/fetch_stats", body = data, encode = "form", verbose())
+    data <- fromJSON(content(res, "text", encoding='UTF-8'))
+    return(data)
+  }
 }
 
 fetch_elastic_message <- function(date,channel){
-  data = list(
+  if(!(is.na(channel)) & (channel!=""))
+  {
+    data = list(
     channel=channel,
     date_text=date 
-  )
-  res <- POST("http://ip-172-31-44-20.ap-south-1.compute.internal/mogambo_api/analytics/fetch_messages", body = data, encode = "form", verbose())
-  data <- fromJSON(content(res, "text", encoding='UTF-8'))
-  return(data)
+    )
+    res <- POST("http://ip-172-31-44-20.ap-south-1.compute.internal/mogambo_api/analytics/fetch_messages", body = data, encode = "form", verbose())
+    data <- fromJSON(content(res, "text", encoding='UTF-8'))
+    return(data)
+  }
 }
+
+
+fetch_channels <- function(){
+    res <- GET("http://ip-172-31-44-20.ap-south-1.compute.internal/mogambo_api/analytics/fetch_channels")
+    data <- fromJSON(content(res, "text", encoding='UTF-8'))
+}
+
 
 ######## wordcloud#################
 wordcloudentity<-function(freq.df)
@@ -63,4 +76,9 @@ date_filters <- c( "Last 1 Hour", "Last 2 Hour", "Last 4 Hour", "Last 12 Hour", 
 
 
 
-channels_list <- c("flightschannel","reminderschannel","aroundmechannel","trainschannel","cabschannel","rechargechannel")
+#channels_list <- c("flightschannel","reminderschannel","aroundmechannel","trainschannel","cabschannel","rechargechannel")
+channels_func <- fetch_channels()
+channels_list <- channels_func$channels
+channels_list <- channels_list[sort.list(channels_list)]
+
+

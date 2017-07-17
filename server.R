@@ -11,6 +11,7 @@ shinyServer(function(input, output, session){
   
   all_stats_r <- reactive({
     all_stats <- fetch_elastic_stats(input$date, input$channel)
+    updateSelectInput(session, "stories", label = NULL, choices =c("All",as.character(unique(all_stats$stories_stats$story))), selected = "All") 
     return(all_stats)
   })
   
@@ -87,7 +88,7 @@ shinyServer(function(input, output, session){
   break_conversations <- function(data_df){
     all_stats <- all_stats_r()
     breaked_coll_conv <- all_stats$breaked_conv
-    data_df$coll_conv <-paste(data_df$coll_id,"_",data_df$conversation_no) 
+    data_df$coll_conv <-paste(data_df$coll_id,"_",data_df$conversation_no,sep="") 
     data_df <- data_df[data_df$coll_conv %in% breaked_coll_conv, ]
     data_df <- data_df[with(data_df, order(message_id)), ]
     coll_conv <- unique(data_df$coll_conv)
@@ -109,7 +110,6 @@ shinyServer(function(input, output, session){
     story_ <- input$stories
     all_stats <- all_stats_r()
     story_count2 <-all_stats$nodes_stats
-    updateSelectInput(session, "stories", label = NULL, choices =c("All",as.character(unique(story_count2$story))), selected = "All")  # input$date and others are Date objects. When outputting
     story_count2 <- data.frame(story=story_count2$story,node=story_count2$node,conversation=story_count2$total_chats,gogo_automation=story_count2$end_to_end_gogo_chat, users = story_count2$users)
     story_count2 <- plyr::rename(story_count2, c("node"="Node","conversation"="Total Conversations","gogo_automation"="%Gogo Automate","users"="Total Users"))
     columns <- c("story","Node","Total Conversations","%Gogo Automate", "Total Users")

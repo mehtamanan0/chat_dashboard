@@ -22,14 +22,6 @@ viewCache <- function(df){
 ###########################################################################
 
 
-date_convertion_to_IST <- function(date_string){
-  date_string <- strftime(strptime(date_string, format="%Y-%m-%dT%H:%MZ"),"%Y-%m-%d %H:%M:%S")
-  utc_date_dtring <- as.POSIXct(date_string, tz="UTC")
-  ist_date_string <- format(utc_date_dtring, tz="Asia/Kolkata",usetz=TRUE)
-  ist_date_string<- strftime(ist_date_string, "%Y-%m-%d %H:%M:%S")
-  return(ist_date_string)
-}
-
 fetch_elastic_stats <- function(date,channel){
   data = list(
     channel=channel,

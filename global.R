@@ -71,8 +71,7 @@ break_messages_type<-c("True_no_nodes","True_trash_detected","True_nothing_chang
 default_columns <- c("chat_link", "body", "story", "last_nodes", "predicted_domain", "stop_logic_data","message_id")
 
 
-## Date filter
-date_filters <- c( "Last 1 Hour", "Last 2 Hour", "Last 4 Hour", "Last 12 Hour", "Yesterday", "Last Week")
+
 
 
 
@@ -80,5 +79,18 @@ date_filters <- c( "Last 1 Hour", "Last 2 Hour", "Last 4 Hour", "Last 12 Hour", 
 channels_func <- fetch_channels()
 channels_list <- channels_func$channels
 channels_list <- channels_list[sort.list(channels_list)]
+
+
+get_last_six_days <- function(){
+  dates <- seq(as.Date(Sys.Date()-7), as.Date(Sys.Date()-2), by="days")
+  dates <- rev(dates)
+  dates <- format(as.Date(dates), "%b %d,%Y")
+  return(dates)
+}
+
+## Date filter
+date_filters <- c( "Last 1 Hour", "Last 2 Hour", "Last 4 Hour", "Last 12 Hour", "Yesterday")
+date_filters <- c(date_filters, get_last_six_days())
+date_filters <- c(date_filters, "Last Week")
 
 
